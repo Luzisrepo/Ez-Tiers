@@ -1,49 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Sword Leaderboard</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sword Leaderboard - EZ Tiers</title>
+  <link rel="stylesheet" href="../styles/style.css" />
 </head>
 <body>
-  <div class="container">
-    <h2>Sword Leaderboard</h2>
-    <nav>
-      <a href="sword.html">Sword</a>
-      <a href="axe.html">Axe</a>
-      <a href="crystal.html">Crystal</a>
-      <a href="bedwars.html">Bedwars</a>
-      <a href="fireball.html">Fireball Fight</a>
-      <a href="nethpot.html">Nethpot</a>
-      <a href="diapot.html">Diapot</a>
-    </nav>
-
-    <div id="adminSection">
-      <input type="password" id="adminPin" placeholder="Admin Pin">
-      <button onclick="checkAdmin()">Enter</button>
+  <nav id="navbar">
+    <div class="container flex-between">
+      <a href="index.html" class="logo gradient-text">EZ Tiers</a>
+      <ul class="nav-links">
+        <li><a href="sword.html" class="nav-link active">Sword</a></li>
+        <li><a href="axe.html" class="nav-link">Axe</a></li>
+        <li><a href="crystal.html" class="nav-link">Crystal</a></li>
+        <li><a href="bedwars.html" class="nav-link">Bedwars</a></li>
+        <li><a href="fireball.html" class="nav-link">Fireball Fight</a></li>
+        <li><a href="nethpot.html" class="nav-link">Nethpot</a></li>
+        <li><a href="diapot.html" class="nav-link">Diapot</a></li>
+      </ul>
     </div>
+  </nav>
 
-    <div id="addForm" style="display:none;">
-      <input type="text" id="nameInput" placeholder="Player Name">
-      <input type="text" id="tierInput" placeholder="Tier">
-      <button onclick="addPlayer()">Add Player</button>
-    </div>
-
+  <main class="container" style="margin-top: 100px;">
+    <h2 class="gradient-text">Sword Leaderboard</h2>
     <table id="leaderboard">
       <thead>
         <tr>
-          <th>Name</th>
+          <th>Player</th>
           <th>Tier</th>
+          <th>Score</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
-  </div>
+
+    <section id="adminSection">
+      <h3>Admin Panel</h3>
+      <form id="addForm">
+        <input type="text" id="playerName" placeholder="Player Name" required />
+        <input type="text" id="playerTier" placeholder="Tier (e.g., HT1)" required />
+        <input type="number" id="playerScore" placeholder="Score" required />
+        <button type="submit">Add Player</button>
+      </form>
+    </section>
+  </main>
 
   <script>
-    const gamemode = "sword";
+    const mode = "sword"; // Change this per page accordingly
+
+    const apiUrl = `/api/players?mode=${mode}`;
+
+    async function fetchPlayers() {
+      const res = await fetch(apiUrl);
+      return await res.json();
+    }
+
+    async function renderLeaderboard() {
+      const tbody = document.querySelector("#leaderboard tbody");
+      tbody.innerHTML = "";
+      const players = await fetchPlayers();
+      players.sort((a,b) => b.score - a.score);
+      for (const player of players) {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${player.name}</td>
+          <td>${player.tier}</td>
+          <td>${player.score}</td>
+          <td class="actions">
+            <button data-name="${player.name}" class="edit">Edit</button>
+            <button data-name="${player.name}" class="delete">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+      attachActionHandlers();
+    }
+
+    function attachActionHandlers() {
+      document.querySelectorAll(".edit").forEach(button => {
+        button.onclick = async () => {
+          const name = button.dataset.name;
+          const newTier = prompt("Enter new tier for " + name);
+          const newScore = prompt("Enter new score for " + name);
+          if (newTier && !isNaN(newScore)) {
+            await fetch(`/api/players?mode=${mode}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, tier: newTier, score: Number(newScore) }),
+            });
+            renderLeaderboard();
+          }
+        };
+      });
+
+      document.querySelectorAll(".delete").forEach(button => {
+        button.onclick = async () => {
+          const name = button.dataset.name;
+          if (confirm(`Delete player ${name}?`)) {
+            await fetch(`/api/players?mode=${mode}`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name }),
+            });
+            renderLeaderboard();
+          }
+        };
+      });
+    }
+
+    document.getElementById("addForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("playerName").value.trim();
+      const tier = document.getElementById("playerTier").value.trim();
+      const score = Number(document.getElementById("playerScore").value.trim());
+      if (name && tier && !isNaN(score)) {
+        await fetch(`/api/players?mode=${mode}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, tier, score }),
+        });
+        document.getElementById("addForm").reset();
+        renderLeaderboard();
+      }
+    };
+
+    renderLeaderboard();
   </script>
-  <script src="script.js"></script>
 </body>
 </html>
