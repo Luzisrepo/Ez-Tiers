@@ -1,0 +1,59 @@
+/* style.css */
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(circle at top, #0f0c29, #302b63, #24243e);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1, h2 {
+    text-align: center;
+    margin-top: 20px;
+    text-shadow: 0 0 10px cyan;
+}
+
+.menu, .leaderboard {
+    backdrop-filter: blur(15px);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    margin-top: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+    width: 90%;
+    max-width: 600px;
+}
+
+.menu a {
+    display: block;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid cyan;
+    border-radius: 10px;
+    text-align: center;
+    color: cyan;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.menu a:hover {
+    background: rgba(0, 255, 255, 0.3);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
