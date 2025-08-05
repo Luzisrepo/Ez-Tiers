@@ -1,9 +1,24 @@
 // leaderboard.js
 
+const tierRank = {
+    "HT1": 1,
+    "HT2": 2,
+    "LT1": 3,
+    "LT2": 4,
+    "LT3": 5
+};
+
 async function loadLeaderboard(gamemode) {
     try {
         const response = await fetch(`${gamemode}.json`);
-        const data = await response.json();
+        let data = await response.json();
+
+        // Sort data by tier
+        data.sort((a, b) => {
+            const rankA = tierRank[a["Tier"]] || 999;
+            const rankB = tierRank[b["Tier"]] || 999;
+            return rankA - rankB; // ascending (HT1 -> LT3)
+        });
 
         const container = document.getElementById("leaderboard");
         const table = document.createElement("table");
