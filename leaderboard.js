@@ -2,11 +2,17 @@
 
 const tierRank = {
     "HT1": 1,
-    "HT2": 2,
-    "LT1": 3,
+    "LT1": 2,
+    "HT2": 3,
     "LT2": 4,
-    "LT3": 5
+    "HT3": 5,
+    "LT3": 6,
+    "HT4": 7,
+    "LT4": 8,
+    "HT5": 9,
+    "LT5": 10,
 };
+
 
 async function loadLeaderboard(gamemode) {
     try {
