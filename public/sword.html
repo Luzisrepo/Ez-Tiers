@@ -48,100 +48,114 @@
   </main>
 
   <script>
-    const ADMIN_PIN = "0255";
+    <script>
+const ADMIN_PIN = "0255";
 let isAdmin = false;
+let mode = ""; // will be set based on URL or file name
+
+// Extract mode from the file name, e.g. "sword.html" -> "sword"
+function detectMode() {
+  const path = window.location.pathname;
+  const file = path.substring(path.lastIndexOf('/') + 1);
+  return file.replace(".html", "").toLowerCase();
+}
 
 function requestAdminPin() {
-  const inputPin = prompt("Enter admin PIN:");
+  const inputPin = prompt("Enter Admin PIN:");
   if (inputPin === ADMIN_PIN) {
     isAdmin = true;
     document.getElementById("adminSection").style.display = "block";
   } else {
-    alert("Incorrect PIN");
+    alert("Incorrect PIN. Admin controls are hidden.");
+    isAdmin = false;
     document.getElementById("adminSection").style.display = "none";
   }
 }
 
-    const mode = "sword"; // Change this per page accordingly
-
-    const apiUrl = `/api/players?mode=${mode}`;
-
-    async function fetchPlayers() {
-      const res = await fetch(apiUrl);
-      return await res.json();
-    }
-
-    async function renderLeaderboard() {
-      const tbody = document.querySelector("#leaderboard tbody");
+function loadLeaderboard() {
+  fetch(`/api/leaderboard?mode=${mode}`)
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("leaderboardBody");
       tbody.innerHTML = "";
-      const players = await fetchPlayers();
-      players.sort((a,b) => b.score - a.score);
-      for (const player of players) {
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
+      data.sort((a, b) => a.tier.localeCompare(b.tier)); // auto-sorting
+      data.forEach(player => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
           <td>${player.name}</td>
           <td>${player.tier}</td>
-          <td>${player.score}</td>
-          <td class="actions">
-            <button data-name="${player.name}" class="edit">Edit</button>
-            <button data-name="${player.name}" class="delete">Delete</button>
-          </td>
+          ${isAdmin ? `
+            <td class="actions">
+              <button onclick="editPlayer('${player.name}', '${player.tier}')">Edit</button>
+              <button class="delete" onclick="removePlayer('${player.name}')">Delete</button>
+            </td>
+          ` : ""}
         `;
-        tbody.appendChild(tr);
-      }
-      attachActionHandlers();
-    }
-
-    function attachActionHandlers() {
-      document.querySelectorAll(".edit").forEach(button => {
-        button.onclick = async () => {
-          const name = button.dataset.name;
-          const newTier = prompt("Enter new tier for " + name);
-          const newScore = prompt("Enter new score for " + name);
-          if (newTier && !isNaN(newScore)) {
-            await fetch(`/api/players?mode=${mode}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name, tier: newTier, score: Number(newScore) }),
-            });
-            renderLeaderboard();
-          }
-        };
+        tbody.appendChild(row);
       });
+    });
+}
 
-      document.querySelectorAll(".delete").forEach(button => {
-        button.onclick = async () => {
-          const name = button.dataset.name;
-          if (confirm(`Delete player ${name}?`)) {
-            await fetch(`/api/players?mode=${mode}`, {
-              method: "DELETE",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name }),
-            });
-            renderLeaderboard();
-          }
-        };
+function addPlayer() {
+  const name = document.getElementById("playerName").value.trim();
+  const tier = document.getElementById("playerTier").value.trim();
+  if (!name || !tier) return alert("Please enter name and tier");
+
+  fetch(`/api/leaderboard`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, tier, mode, pin: ADMIN_PIN })
+  })
+    .then(res => res.json())
+    .then(res => {
+      alert(res.message || "Player added");
+      loadLeaderboard();
+    });
+}
+
+function editPlayer(name, currentTier) {
+  const newTier = prompt(`Enter new tier for ${name}`, currentTier);
+  if (newTier) {
+    fetch(`/api/leaderboard`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, tier: newTier, mode, pin: ADMIN_PIN })
+    })
+      .then(res => res.json())
+      .then(res => {
+        alert(res.message || "Player updated");
+        loadLeaderboard();
       });
-    }
+  }
+}
 
-    document.getElementById("addForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("playerName").value.trim();
-      const tier = document.getElementById("playerTier").value.trim();
-      const score = Number(document.getElementById("playerScore").value.trim());
-      if (name && tier && !isNaN(score)) {
-        await fetch(`/api/players?mode=${mode}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, tier, score }),
-        });
-        document.getElementById("addForm").reset();
-        renderLeaderboard();
-      }
-    };
+function removePlayer(name) {
+  if (!confirm(`Remove ${name}?`)) return;
+  fetch(`/api/leaderboard`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, mode, pin: ADMIN_PIN })
+  })
+    .then(res => res.json())
+    .then(res => {
+      alert(res.message || "Player removed");
+      loadLeaderboard();
+    });
+}
 
-    renderLeaderboard();
+// Navigation logic
+function switchMode(target) {
+  window.location.href = `${target.toLowerCase()}.html`;
+}
+
+// Run on load
+window.onload = () => {
+  mode = detectMode();
+  loadLeaderboard();
+  requestAdminPin();
+};
+</script>
+
   </script>
 </body>
 </html>
