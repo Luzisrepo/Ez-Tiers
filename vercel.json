@@ -1,0 +1,25 @@
+{
+  "functions": {
+    "api/sword/route.js": {
+      "includeFiles": "data/sword/sword.json"
+    },
+    "api/axe/route.js": {
+      "includeFiles": "data/axe/axe.json"
+    },
+    "api/crystal/route.js": {
+      "includeFiles": "data/crystal/crystal.json"
+    },
+    "api/bedwars/route.js": {
+      "includeFiles": "data/bedwars/bedwars.json"
+    },
+    "api/fireball/route.js": {
+      "includeFiles": "data/fireball/fireball.json"
+    },
+    "api/nethpot/route.js": {
+      "includeFiles": "data/nethpot/nethpot.json"
+    },
+    "api/diapot/route.js": {
+      "includeFiles": "data/diapot/diapot.json"
+    }
+  }
+}

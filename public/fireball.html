@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fireball Leaderboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Fireball Leaderboard</h2>
+    <nav>
+      <a href="sword.html">Sword</a>
+      <a href="axe.html">Axe</a>
+      <a href="crystal.html">Crystal</a>
+      <a href="bedwars.html">Bedwars</a>
+      <a href="fireball.html">Fireball Fight</a>
+      <a href="nethpot.html">Nethpot</a>
+      <a href="diapot.html">Diapot</a>
+    </nav>
+
+    <div id="adminSection">
+      <input type="password" id="adminPin" placeholder="Admin Pin">
+      <button onclick="checkAdmin()">Enter</button>
+    </div>
+
+    <div id="addForm" style="display:none;">
+      <input type="text" id="nameInput" placeholder="Player Name">
+      <input type="text" id="tierInput" placeholder="Tier">
+      <button onclick="addPlayer()">Add Player</button>
+    </div>
+
+    <table id="leaderboard">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Tier</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const gamemode = "fireball";
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
