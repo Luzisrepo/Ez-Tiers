@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/leaderboard/route.js": {
+      "includeFiles": "data/tiers.json"
+    }
+  }
+}
