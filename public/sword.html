@@ -48,6 +48,20 @@
   </main>
 
   <script>
+    const ADMIN_PIN = "0255";
+let isAdmin = false;
+
+function requestAdminPin() {
+  const inputPin = prompt("Enter admin PIN:");
+  if (inputPin === ADMIN_PIN) {
+    isAdmin = true;
+    document.getElementById("adminSection").style.display = "block";
+  } else {
+    alert("Incorrect PIN");
+    document.getElementById("adminSection").style.display = "none";
+  }
+}
+
     const mode = "sword"; // Change this per page accordingly
 
     const apiUrl = `/api/players?mode=${mode}`;
