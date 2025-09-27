@@ -85,6 +85,17 @@
             color: var(--primary);
             filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.5));
         }
+        /* Navigation */
+        nav {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
         .subtitle {
             font-size: 1.2rem;
@@ -96,6 +107,34 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+        }
+
+         .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary);
         }
 
         .user-info {
@@ -737,6 +776,7 @@
 </head>
 <body>
     <div id="particles-js"></div>
+     
     
     <!-- Notification System -->
     <div class="notification" id="notification"></div>
@@ -806,6 +846,20 @@
                     <p class="subtitle">Competitive Minecraft Leaderboards</p>
                 </div>
             </div>
+            <nav>
+        <div class="container">
+            <div class="nav-container">
+                
+                <div class="nav-links">
+                    <a href="#"class=nav-link><i class="fas fa-home"></i> Home</a>
+                    <a href="/leaderboards" class="nav-link active"><i class="fas fa-trophy"></i> Leaderboards</a>
+                    <a href="https://discord.gg/faQCsjgZ49" class="nav-link" target="_blank"><i class="fab fa-discord"></i> Discord</a>
+                    <a href="/docs" class="nav-link"><i class="fas fa-book"></i> Docs</a>
+                    
+                </div>
+            </div>
+        </div>
+    </nav>
             
             <div class="auth-section">
                 <div class="user-info" id="userInfo" style="display: none;">
