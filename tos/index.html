@@ -1,1 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service & Privacy Policy | Ez Tiers</title>
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark-bg: #0f0f23;
+            --darker-bg: #0a0a18;
+            --card-bg: rgba(30, 30, 46, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0c0;
+            --text-muted: #6b6b8a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --glass-bg: rgba(20, 20, 36, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --bg-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --glow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Navigation */
+        nav {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text-primary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background-color: var(--glass-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 2.5rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--card-shadow), var(--glow);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Game Modes Section */
+        .game-modes {
+            padding: 5rem 0;
+        }
+
+        .modes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .mode-card {
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background-color: var(--glass-bg);
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .mode-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .mode-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5rem;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        /* TOS & Privacy Policy Styles */
+        .legal-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .legal-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .legal-header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .legal-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .legal-content {
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background-color: var(--glass-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 3rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 3rem;
+        }
+
+        .legal-section {
+            margin-bottom: 3rem;
+        }
+
+        .legal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .legal-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        .legal-section h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+
+        .legal-section p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .legal-section ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .legal-section li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .legal-section strong {
+            color: var(--text-primary);
+        }
+
+        .legal-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--primary), transparent);
+            margin: 3rem 0;
+        }
+
+        .back-to-top {
+            display: block;
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-to-top:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .nav-container {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-links {
+                justify-content: center;
+            }
+            
+            .legal-header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .legal-content {
+                padding: 2rem;
+            }
+            
+            .legal-section h2 {
+                font-size: 1.8rem;
+            }
+            
+            .legal-section h3 {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .modes-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .legal-header h1 {
+                font-size: 2rem;
+            }
+            
+            .legal-content {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-container">
+                <div class="logo-container">
+                    <div class="logo">Ez Tiers</div>
+                </div>
+                <div class="nav-links">
+                    <a href="/home" class="nav-link">Home</a>
+                    <a href="/leaderboards" class="nav-link">Leaderboard</a>
+                    
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Legal Content -->
+    <div class="legal-container">
+        <div class="legal-header">
+            <h1 id="binfo">Legal Information</h1>
+            <p>Our Terms of Service and Privacy Policy to ensure transparency and trust</p>
+        </div>
+
+        <div class="legal-content">
+            <!-- Privacy Policy Section -->
+            <div class="legal-section">
+                <h2 id="privacy-policy">Privacy Policy</h2>
+                <p><strong>Effective Date:</strong> 27/09/25</p>
+                
+                <p>Ez Tiers respects your privacy. This Privacy Policy explains what information we collect, how we use it, and your choices when using our Website.</p>
+                
+                <h3>1. Information We Collect</h3>
+                <p>We collect the following types of information when you use the Website:</p>
+                <ul>
+                    <li><strong>Login Data:</strong>
+                        <ul>
+                            <li>When you log in using <strong>Supabase Auth</strong>, we receive your unique identifier and login credentials (handled securely by Supabase).</li>
+                            <li>We do not support signups; only login access is available.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Leaderboard Data:</strong>
+                        <ul>
+                            <li>Player names and assigned tiers that you add or edit while logged in.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Technical Data:</strong>
+                        <ul>
+                            <li>Basic system logs such as IP address, browser type, and usage activity, which may be collected automatically for security and analytics.</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h3>2. How We Use Your Information</h3>
+                <p>We use collected information to:</p>
+                <ul>
+                    <li>Authenticate users through <strong>Supabase Auth</strong>.</li>
+                    <li>Display, update, and manage leaderboard tiers.</li>
+                    <li>Maintain Website security and prevent misuse.</li>
+                    <li>Improve Website functionality and user experience.</li>
+                </ul>
+                
+                <h3>3. Sharing of Information</h3>
+                <ul>
+                    <li>We do <strong>not sell, rent, or trade</strong> your personal information to third parties.</li>
+                    <li>Data may be shared with <strong>Supabase</strong> as part of authentication and database hosting.</li>
+                    <li>We may disclose information if required by law or to protect the rights and safety of Ez Tiers and its users.</li>
+                </ul>
+                
+                <h3>4. Data Security</h3>
+                <ul>
+                    <li>We rely on Supabase for secure authentication and data storage.</li>
+                    <li>While reasonable security measures are in place, no system is 100% secure. Use the Website at your own risk.</li>
+                </ul>
+                
+                <h3>5. Your Choices</h3>
+                <ul>
+                    <li>You may choose not to log in; however, login is required to add or edit player tiers.</li>
+                    <li>You may request the removal of data you've submitted by contacting us directly.</li>
+                </ul>
+                
+                <h3>6. Changes to This Policy</h3>
+                <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated effective date. Continued use of the Website after changes means you accept the revised policy.</p>
+                
+                <h3>7. Contact Us</h3>
+                <p>For questions about this Privacy Policy, you can reach the Website administrators at:</p>
+                <p><strong>rayzz.dev</strong></p>
+            </div>
+
+            <div class="legal-divider"></div>
+
+            <!-- Terms of Service Section -->
+            <div class="legal-section">
+                <h2 id="terms-of-service">Terms of Service</h2>
+                <p><strong>Effective Date:</strong> 27/09/25</p>
+                
+                <p>Welcome to <strong>Ez Tiers</strong> ("the Website"). By accessing or using this Website, you agree to comply with and be bound by the following Terms of Service ("Terms"). If you do not agree, you may not use this Website.</p>
+                
+                <h3>1. Use of the Website</h3>
+                <ul>
+                    <li>The Website is provided for the purpose of displaying and managing <strong>leaderboard tiers</strong> across various game modes.</li>
+                    <li>You agree to use the Website only for lawful purposes and in a way that does not infringe on the rights of others or restrict their enjoyment of the Website.</li>
+                    <li>Unauthorized attempts to interfere with the Website's functionality, security, or data are strictly prohibited.</li>
+                </ul>
+                
+                <h3>2. Accounts and Login</h3>
+                <ul>
+                    <li>The Website uses <strong>Supabase Auth</strong> for login.</li>
+                    <li><strong>Login only</strong> is available — signup is not offered.</li>
+                    <li>By logging in, you confirm that you are authorized to access your account and that you will not share your credentials with others.</li>
+                    <li>Logged-in users may <strong>add players</strong> and <strong>edit player tiers</strong>. Misuse of this functionality (e.g., spamming, falsifying data, or harassment) may result in account suspension.</li>
+                </ul>
+                
+                <h3>3. User Content</h3>
+                <ul>
+                    <li>Any data you submit (e.g., player names, tiers) remains your responsibility.</li>
+                    <li>By submitting content, you grant Ez Tiers a license to display and manage it on the leaderboard.</li>
+                    <li>We reserve the right to remove or edit any submitted content that violates these Terms.</li>
+                </ul>
+                
+                <h3>4. Data & Privacy</h3>
+                <ul>
+                    <li>We use Supabase services to manage authentication and store leaderboard data.</li>
+                    <li>While we take reasonable measures to secure data, you understand that no system is 100% secure. Use at your own risk.</li>
+                    <li>For details on how data is handled, please refer to our Privacy Policy.</li>
+                </ul>
+                
+                <h3>5. Prohibited Activities</h3>
+                <p>You may not:</p>
+                <ul>
+                    <li>Use the Website for illegal or fraudulent purposes.</li>
+                    <li>Attempt to bypass security measures or gain unauthorized access.</li>
+                    <li>Post, submit, or modify data in ways intended to disrupt the leaderboard or mislead users.</li>
+                </ul>
+                
+                <h3>6. Disclaimers</h3>
+                <ul>
+                    <li>The Website is provided "as is" and "as available," without warranties of any kind.</li>
+                    <li>We do not guarantee uninterrupted service, error-free functionality, or that the Website will meet all your expectations.</li>
+                    <li>Game-related names or references are not affiliated with or endorsed by their respective owners.</li>
+                </ul>
+                
+                <h3>7. Limitation of Liability</h3>
+                <ul>
+                    <li>Ez Tiers and its operators are not liable for any damages resulting from your use of the Website, including data loss, downtime, or misuse of the platform.</li>
+                </ul>
+                
+                <h3>8. Changes to These Terms</h3>
+                <ul>
+                    <li>We may update these Terms at any time. Changes will be effective once posted. Continued use of the Website after changes constitutes acceptance of the revised Terms.</li>
+                </ul>
+                
+                <h3>9. Contact</h3>
+                <p>For questions regarding these Terms, you can contact the Website administrators at:</p>
+                <p><strong>rayzz.dev</strong></p>
+            </div>
+            
+            <a href="#binfo" class="back-to-top">Back to Top</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">Ez Tiers</div>
+                <div class="footer-links">
+                    <a href="/home" class="footer-link">Home</a>
+                    <a href="/leaderboard" class="footer-link">Leaderboard</a>
+                    <a href="#privacy-policy" class="footer-link">Privacy Policy</a>
+                    <a href="#terms-of-service" class="footer-link">Terms of Service</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 Ez Tiers. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Optional: Include particles.js if you want the background animation -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#8b5cf6" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#8b5cf6",
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            }
+        });
+    </script>
+    -->
+</body>
+</html>
