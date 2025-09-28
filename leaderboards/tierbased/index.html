@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ez Tiers - Tier-Based Leaderboards</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark-bg: #0f0f23;
+            --darker-bg: #0a0a18;
+            --card-bg: rgba(30, 30, 46, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0c0;
+            --text-muted: #6b6b8a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --glass-bg: rgba(20, 20, 36, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --bg-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --glow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Navigation */
+        nav {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        }
+
+        /* Main Content */
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .glass-panel {
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background-color: var(--glass-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            margin-bottom: 2rem;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow), var(--glow);
+        }
+
+        .mode-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .mode-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .mode-btn.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Tier Columns Layout */
+        .tiers-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .tier-column {
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background-color: var(--glass-bg);
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tier-column:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tier-header {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tier-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .tier-1 .tier-header {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(8, 145, 178, 0.3));
+        }
+
+        .tier-2 .tier-header {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(202, 138, 4, 0.3));
+        }
+
+        .tier-3 .tier-header {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.3));
+        }
+
+        .tier-4 .tier-header {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+        }
+
+        .player-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .player-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .player-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        .player-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .player-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .player-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .player-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .player-item:last-child {
+            border-bottom: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .tiers-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .nav-container {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .tiers-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-selector {
+                gap: 0.5rem;
+            }
+            
+            .mode-btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .player-item {
+                padding: 0.8rem 1rem;
+            }
+            
+            .player-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    
+    <div class="container">
+        <!-- Navigation -->
+        <nav>
+            <div class="nav-container">
+                <div class="logo-container">
+                    <h1 class="logo">Ez Tiers</h1>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+                    <a href="#" class="nav-link active"><i class="fas fa-trophy"></i> Leaderboards</a>
+                    <a href="https://discord.gg/example" class="nav-link" target="_blank"><i class="fab fa-discord"></i> Discord</a>
+                    <a href="docs.html" class="nav-link"><i class="fas fa-book"></i> Docs</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="glass-panel">
+            <h1 class="page-title">Competitive Leaderboards</h1>
+            <p class="page-subtitle">Track player rankings across all game modes with our tier-based system</p>
+            
+            <div class="mode-selector" id="modeSelector">
+                <button class="mode-btn active" data-mode="sword">Sword</button>
+                <button class="mode-btn" data-mode="axe">Axe</button>
+                <button class="mode-btn" data-mode="nethpot">Nethpot</button>
+                <button class="mode-btn" data-mode="diapot">Diapot</button>
+                <button class="mode-btn" data-mode="mace">Mace</button>
+                <button class="mode-btn" data-mode="uhc">UHC</button>
+                <button class="mode-btn" data-mode="smp">SMP</button>
+                <button class="mode-btn" data-mode="creeper">Creeper</button>
+                <button class="mode-btn" data-mode="speedbeast">Speedbeast</button>
+                <button class="mode-btn" data-mode="bedwars">BedWars</button>
+                <button class="mode-btn" data-mode="the_bridge">The Bridge</button>
+                <button class="mode-btn" data-mode="classic">Classic</button>
+                <button class="mode-btn" data-mode="sumo">Sumo</button>
+            </div>
+        </div>
+
+        <!-- Tier Columns -->
+        <div class="tiers-container">
+            <!-- Tier 1 Column -->
+            <div class="tier-column tier-1">
+                <div class="tier-header">
+                    <h2 class="tier-title">Tier 1</h2>
+                    <div class="tier-subtitle">Elite Players</div>
+                </div>
+                <div class="player-list" id="tier1-list">
+                    <div class="loading">Loading players...</div>
+                </div>
+            </div>
+
+            <!-- Tier 2 Column -->
+            <div class="tier-column tier-2">
+                <div class="tier-header">
+                    <h2 class="tier-title">Tier 2</h2>
+                    <div class="tier-subtitle">Advanced Players</div>
+                </div>
+                <div class="player-list" id="tier2-list">
+                    <div class="loading">Loading players...</div>
+                </div>
+            </div>
+
+            <!-- Tier 3 Column -->
+            <div class="tier-column tier-3">
+                <div class="tier-header">
+                    <h2 class="tier-title">Tier 3</h2>
+                    <div class="tier-subtitle">Skilled Players</div>
+                </div>
+                <div class="player-list" id="tier3-list">
+                    <div class="loading">Loading players...</div>
+                </div>
+            </div>
+
+            <!-- Tier 4 Column -->
+            <div class="tier-column tier-4">
+                <div class="tier-header">
+                    <h2 class="tier-title">Tier 4</h2>
+                    <div class="tier-subtitle">Developing Players</div>
+                </div>
+                <div class="player-list" id="tier4-list">
+                    <div class="loading">Loading players...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Ez Tiers. All rights reserved. Minecraft is a trademark of Mojang AB.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase configuration
+        const supabaseUrl = 'https://dkfimhcwiufignzfqnxm.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmltaGN3aXVmaWduemZxbnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5OTc3MjQsImV4cCI6MjA3NDU3MzcyNH0.lOtCk4v3fkd1DJfvpqrv-NgyByNhEsaHeL4GEqGrQa8';
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Game modes
+        const gameModes = [
+            { id: 'sword', name: 'Sword' },
+            { id: 'axe', name: 'Axe' },
+            { id: 'nethpot', name: 'Nethpot' },
+            { id: 'diapot', name: 'Diapot' },
+            { id: 'mace', name: 'Mace' },
+            { id: 'uhc', name: 'UHC' },
+            { id: 'smp', name: 'SMP' },
+            { id: 'creeper', name: 'Creeper' },
+            { id: 'speedbeast', name: 'Speedbeast' },
+            { id: 'bedwars', name: 'BedWars' },
+            { id: 'the_bridge', name: 'The Bridge' },
+            { id: 'classic', name: 'Classic' },
+            { id: 'sumo', name: 'Sumo' }
+        ];
+        
+        // Tier mapping with scores for sorting
+        const tiers = {
+            'LT5': { name: 'Low Tier 5', score: 1, displayTier: 4 },
+            'HT5': { name: 'High Tier 5', score: 2, displayTier: 4 },
+            'LT4': { name: 'Low Tier 4', score: 3, displayTier: 4 },
+            'HT4': { name: 'High Tier 4', score: 4, displayTier: 4 },
+            'LT3': { name: 'Low Tier 3', score: 5, displayTier: 3 },
+            'HT3': { name: 'High Tier 3', score: 6, displayTier: 3 },
+            'LT2': { name: 'Low Tier 2', score: 7, displayTier: 2 },
+            'HT2': { name: 'High Tier 2', score: 8, displayTier: 2 },
+            'LT1': { name: 'Low Tier 1', score: 9, displayTier: 1 },
+            'HT1': { name: 'High Tier 1', score: 10, displayTier: 1 }
+        };
+        
+        // Current state
+        let currentMode = 'sword';
+        
+        // Initialize particles.js
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 70, density: { enable: true, value_area: 800 } },
+                color: { value: "#8b5cf6" },
+                shape: { type: "circle" },
+                opacity: { value: 0.3, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#8b5cf6",
+                    opacity: 0.1,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+
+        // Function to load leaderboard data from Supabase
+        async function loadLeaderboardData(mode) {
+            // Show loading state
+            document.getElementById('tier1-list').innerHTML = '<div class="loading">Loading players...</div>';
+            document.getElementById('tier2-list').innerHTML = '<div class="loading">Loading players...</div>';
+            document.getElementById('tier3-list').innerHTML = '<div class="loading">Loading players...</div>';
+            document.getElementById('tier4-list').innerHTML = '<div class="loading">Loading players...</div>';
+            
+            try {
+                // Get the game mode ID
+                const { data: gameModeData, error: modeError } = await supabase
+                    .from('game_modes')
+                    .select('id')
+                    .eq('name', mode)
+                    .single();
+                
+                if (modeError) throw modeError;
+                
+                if (!gameModeData) {
+                    showNoPlayersMessage();
+                    return;
+                }
+                
+                const gameModeId = gameModeData.id;
+                
+                // Get players for this game mode with their tiers
+                const { data: playerData, error: playerError } = await supabase
+                    .from('player_scores')
+                    .select(`
+                        id,
+                        player_name,
+                        tier_id,
+                        tiers (code, name, rank_value)
+                    `)
+                    .eq('game_mode_id', gameModeId);
+                
+                if (playerError) throw playerError;
+                
+                // Group players by display tier
+                const tierGroups = {
+                    tier1: [],
+                    tier2: [],
+                    tier3: [],
+                    tier4: []
+                };
+                
+                if (playerData && playerData.length > 0) {
+                    playerData.forEach(player => {
+                        const tierCode = player.tiers.code;
+                        const displayTier = tiers[tierCode].displayTier;
+                        
+                        // Add player to appropriate tier group
+                        tierGroups[`tier${displayTier}`].push({
+                            id: player.id,
+                            name: player.player_name,
+                            tier: tierCode,
+                            tierName: player.tiers.name
+                        });
+                    });
+                }
+                
+                // Populate the tier columns
+                populateTierColumns(tierGroups);
+                
+            } catch (error) {
+                console.error('Error loading leaderboard data:', error);
+                showErrorMessage();
+            }
+        }
+        
+        // Function to populate tier columns with data
+        function populateTierColumns(tierGroups) {
+            // Clear existing content
+            document.getElementById('tier1-list').innerHTML = '';
+            document.getElementById('tier2-list').innerHTML = '';
+            document.getElementById('tier3-list').innerHTML = '';
+            document.getElementById('tier4-list').innerHTML = '';
+            
+            // Tier 1
+            const tier1List = document.getElementById('tier1-list');
+            if (tierGroups.tier1.length > 0) {
+                tierGroups.tier1.forEach(player => {
+                    const playerItem = document.createElement('div');
+                    playerItem.className = 'player-item';
+                    playerItem.innerHTML = `
+                        <div class="player-avatar">${player.name.charAt(0)}</div>
+                        <div class="player-name">${player.name}</div>
+                    `;
+                    tier1List.appendChild(playerItem);
+                });
+            } else {
+                tier1List.innerHTML = '<div class="loading">No players in this tier</div>';
+            }
+            
+            // Tier 2
+            const tier2List = document.getElementById('tier2-list');
+            if (tierGroups.tier2.length > 0) {
+                tierGroups.tier2.forEach(player => {
+                    const playerItem = document.createElement('div');
+                    playerItem.className = 'player-item';
+                    playerItem.innerHTML = `
+                        <div class="player-avatar">${player.name.charAt(0)}</div>
+                        <div class="player-name">${player.name}</div>
+                    `;
+                    tier2List.appendChild(playerItem);
+                });
+            } else {
+                tier2List.innerHTML = '<div class="loading">No players in this tier</div>';
+            }
+            
+            // Tier 3
+            const tier3List = document.getElementById('tier3-list');
+            if (tierGroups.tier3.length > 0) {
+                tierGroups.tier3.forEach(player => {
+                    const playerItem = document.createElement('div');
+                    playerItem.className = 'player-item';
+                    playerItem.innerHTML = `
+                        <div class="player-avatar">${player.name.charAt(0)}</div>
+                        <div class="player-name">${player.name}</div>
+                    `;
+                    tier3List.appendChild(playerItem);
+                });
+            } else {
+                tier3List.innerHTML = '<div class="loading">No players in this tier</div>';
+            }
+            
+            // Tier 4
+            const tier4List = document.getElementById('tier4-list');
+            if (tierGroups.tier4.length > 0) {
+                tierGroups.tier4.forEach(player => {
+                    const playerItem = document.createElement('div');
+                    playerItem.className = 'player-item';
+                    playerItem.innerHTML = `
+                        <div class="player-avatar">${player.name.charAt(0)}</div>
+                        <div class="player-name">${player.name}</div>
+                    `;
+                    tier4List.appendChild(playerItem);
+                });
+            } else {
+                tier4List.innerHTML = '<div class="loading">No players in this tier</div>';
+            }
+        }
+        
+        // Show no players message
+        function showNoPlayersMessage() {
+            const message = '<div class="loading">No players found for this game mode</div>';
+            document.getElementById('tier1-list').innerHTML = message;
+            document.getElementById('tier2-list').innerHTML = message;
+            document.getElementById('tier3-list').innerHTML = message;
+            document.getElementById('tier4-list').innerHTML = message;
+        }
+        
+        // Show error message
+        function showErrorMessage() {
+            const message = '<div class="loading">Error loading data</div>';
+            document.getElementById('tier1-list').innerHTML = message;
+            document.getElementById('tier2-list').innerHTML = message;
+            document.getElementById('tier3-list').innerHTML = message;
+            document.getElementById('tier4-list').innerHTML = message;
+        }
+        
+        // Game mode switching
+        function setupModeSwitching() {
+            const modeButtons = document.querySelectorAll('.mode-btn');
+            
+            modeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    modeButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    button.classList.add('active');
+                    
+                    // Update current mode and load data
+                    currentMode = button.dataset.mode;
+                    loadLeaderboardData(currentMode);
+                });
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            setupModeSwitching();
+            loadLeaderboardData(currentMode);
+        });
+    </script>
+</body>
+</html>
