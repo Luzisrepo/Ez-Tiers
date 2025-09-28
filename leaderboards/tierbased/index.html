@@ -325,25 +325,30 @@
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 1rem;
             position: relative;
+            min-height: 100px;
         }
 
         .player-item:hover {
             background: rgba(255, 255, 255, 0.03);
         }
 
-        .player-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            color: white;
-            font-size: 1rem;
+        /* Minecraft Body Render Styles */
+        .player-body-render {
+            height: 80px;
+            width: auto;
+            margin-right: 12px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.3s ease;
+            image-rendering: pixelated;
+        }
+
+        .player-body-render:hover {
+            border-color: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+            transform: scale(1.05);
         }
 
         .player-name {
@@ -609,6 +614,10 @@
             .form-row {
                 grid-template-columns: 1fr;
             }
+            
+            .player-body-render {
+                height: 60px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -616,10 +625,8 @@
                 padding: 0.8rem 1rem;
             }
             
-            .player-avatar {
-                width: 35px;
-                height: 35px;
-                font-size: 0.9rem;
+            .player-body-render {
+                height: 50px;
             }
             
             .edit-btn {
@@ -863,6 +870,9 @@
             'HT1': { name: 'High Tier 1', score: 10, displayTier: 1 }
         };
         
+        // UUID cache to avoid repeated API calls
+        const uuidCache = new Map();
+        
         // Current state
         let currentMode = 'sword';
         let currentUser = null;
@@ -933,6 +943,40 @@
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
+        }
+        
+        // Function to get UUID from username with multiple API fallbacks
+        async function getUUID(username) {
+            // Check cache first
+            if (uuidCache.has(username)) {
+                return uuidCache.get(username);
+            }
+            
+            try {
+                // Try Mojang API first
+                const response = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+                if (!response.ok) throw new Error('Player not found in Mojang API');
+                const data = await response.json();
+                uuidCache.set(username, data.id);
+                return data.id;
+            } catch (error) {
+                console.warn(`Mojang API failed for ${username}, trying fallback:`, error);
+                
+                // Fallback to MineTools API 
+                try {
+                    const fallbackResponse = await fetch(`https://api.minetools.eu/uuid/${username}`);
+                    if (!fallbackResponse.ok) throw new Error('Fallback API failed');
+                    const fallbackData = await fallbackResponse.json();
+                    if (fallbackData.id) {
+                        uuidCache.set(username, fallbackData.id);
+                        return fallbackData.id;
+                    }
+                } catch (fallbackError) {
+                    console.error(`All UUID APIs failed for ${username}:`, fallbackError);
+                }
+                
+                return null;
+            }
         }
         
         // Check if user is already logged in
@@ -1044,7 +1088,7 @@
                 }
                 
                 // Populate the tier columns
-                populateTierColumns(tierGroups);
+                await populateTierColumns(tierGroups);
                 
             } catch (error) {
                 console.error('Error loading leaderboard data:', error);
@@ -1052,88 +1096,40 @@
             }
         }
         
-        // Function to populate tier columns with data
-        function populateTierColumns(tierGroups) {
+        // Function to populate tier columns with body renders
+        async function populateTierColumns(tierGroups) {
             // Clear existing content
             document.getElementById('tier1-list').innerHTML = '';
             document.getElementById('tier2-list').innerHTML = '';
             document.getElementById('tier3-list').innerHTML = '';
             document.getElementById('tier4-list').innerHTML = '';
-            
-            // Tier 1
-            const tier1List = document.getElementById('tier1-list');
-            if (tierGroups.tier1.length > 0) {
-                tierGroups.tier1.forEach(player => {
-                    const playerItem = document.createElement('div');
-                    playerItem.className = 'player-item';
-                    playerItem.innerHTML = `
-                        <div class="player-avatar">${player.name.charAt(0)}</div>
-                        <div class="player-name">${player.name}</div>
-                        ${currentUser ? `<button class="edit-btn" data-player-id="${player.id}" data-player-name="${player.name}" data-player-tier="${player.tier}">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>` : ''}
-                    `;
-                    tier1List.appendChild(playerItem);
-                });
-            } else {
-                tier1List.innerHTML = '<div class="loading">No players in this tier</div>';
-            }
-            
-            // Tier 2
-            const tier2List = document.getElementById('tier2-list');
-            if (tierGroups.tier2.length > 0) {
-                tierGroups.tier2.forEach(player => {
-                    const playerItem = document.createElement('div');
-                    playerItem.className = 'player-item';
-                    playerItem.innerHTML = `
-                        <div class="player-avatar">${player.name.charAt(0)}</div>
-                        <div class="player-name">${player.name}</div>
-                        ${currentUser ? `<button class="edit-btn" data-player-id="${player.id}" data-player-name="${player.name}" data-player-tier="${player.tier}">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>` : ''}
-                    `;
-                    tier2List.appendChild(playerItem);
-                });
-            } else {
-                tier2List.innerHTML = '<div class="loading">No players in this tier</div>';
-            }
-            
-            // Tier 3
-            const tier3List = document.getElementById('tier3-list');
-            if (tierGroups.tier3.length > 0) {
-                tierGroups.tier3.forEach(player => {
-                    const playerItem = document.createElement('div');
-                    playerItem.className = 'player-item';
-                    playerItem.innerHTML = `
-                        <div class="player-avatar">${player.name.charAt(0)}</div>
-                        <div class="player-name">${player.name}</div>
-                        ${currentUser ? `<button class="edit-btn" data-player-id="${player.id}" data-player-name="${player.name}" data-player-tier="${player.tier}">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>` : ''}
-                    `;
-                    tier3List.appendChild(playerItem);
-                });
-            } else {
-                tier3List.innerHTML = '<div class="loading">No players in this tier</div>';
-            }
-            
-            // Tier 4
-            const tier4List = document.getElementById('tier4-list');
-            if (tierGroups.tier4.length > 0) {
-                tierGroups.tier4.forEach(player => {
-                    const playerItem = document.createElement('div');
-                    playerItem.className = 'player-item';
-                    playerItem.innerHTML = `
-                        <div class="player-avatar">${player.name.charAt(0)}</div>
-                        <div class="player-name">${player.name}</div>
-                        ${currentUser ? `<button class="edit-btn" data-player-id="${player.id}" data-player-name="${player.name}" data-player-tier="${player.tier}">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>` : ''}
-                    `;
-                    tier4List.appendChild(playerItem);
-                });
-            } else {
-                tier4List.innerHTML = '<div class="loading">No players in this tier</div>';
+
+            // Process each tier group
+            for (const [tierKey, players] of Object.entries(tierGroups)) {
+                const tierList = document.getElementById(`${tierKey}-list`);
+                
+                if (players.length > 0) {
+                    // Create a container for loading state
+                    const loadingContainer = document.createElement('div');
+                    loadingContainer.className = 'loading';
+                    loadingContainer.textContent = 'Loading player renders...';
+                    tierList.appendChild(loadingContainer);
+                    
+                    // Load players asynchronously
+                    for (const player of players) {
+                        const uuid = await getUUID(player.name);
+                        const playerItem = createPlayerItem(player, uuid);
+                        
+                        // Replace loading container with actual content
+                        if (tierList.contains(loadingContainer)) {
+                            tierList.removeChild(loadingContainer);
+                        }
+                        
+                        tierList.appendChild(playerItem);
+                    }
+                } else {
+                    tierList.innerHTML = '<div class="loading">No players in this tier</div>';
+                }
             }
             
             // Add event listeners to edit buttons if user is logged in
@@ -1148,6 +1144,39 @@
                     });
                 });
             }
+        }
+        
+        // Helper function to create player item with body render
+        function createPlayerItem(player, uuid) {
+            const playerItem = document.createElement('div');
+            playerItem.className = 'player-item';
+            
+            // Create fallback SVG placeholder (base64 encoded)
+            const fallbackImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjMzAzMDQwIi8+Cjx0ZXh0IHg9IjQwIiB5PSI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzhCNUM2RiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0Ij4kTUlORUNSRUZUPjwvdGV4dD4KPC9zdmc+';
+            
+            const skinUrl = uuid ? 
+                `https://crafatar.com/renders/body/${uuid}?overlay=true&size=80` : 
+                fallbackImage;
+            
+            playerItem.innerHTML = `
+                <img src="${skinUrl}" 
+                     alt="${player.name}'s Skin" 
+                     class="player-body-render"
+                     data-username="${player.name}"
+                     onerror="this.src='${fallbackImage}'">
+                <div class="player-name">${player.name}</div>
+                ${currentUser ? `<button class="edit-btn" data-player-id="${player.id}" data-player-name="${player.name}" data-player-tier="${player.tier}">
+                    <i class="fas fa-edit"></i> Edit
+                </button>` : ''}
+            `;
+            
+            return playerItem;
+        }
+        
+        // Function to refresh player renders (useful for manual refresh)
+        async function refreshAllPlayerRenders() {
+            uuidCache.clear(); // Clear cache to force fresh API calls
+            await loadLeaderboardData(currentMode);
         }
         
         // Open edit player modal
