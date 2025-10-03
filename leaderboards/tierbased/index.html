@@ -1151,12 +1151,20 @@
             const playerItem = document.createElement('div');
             playerItem.className = 'player-item';
             
+            // Define your fallback UUID for cracked players
+            const fallbackUUID = "8667ba71-b85a-4004-af54-457a9734eed7";
+            let skinUrl;
+            
+            if (uuid) {
+                // Valid UUID found - use player's actual skin
+                skinUrl = `https://crafatar.com/renders/body/${uuid}?overlay=true&size=80`;
+            } else {
+                // No UUID found (cracked player) - use fallback skin
+                skinUrl = `https://crafatar.com/renders/body/${fallbackUUID}?overlay=true&size=80`;
+            }
+            
             // Create fallback SVG placeholder (base64 encoded)
             const fallbackImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjMzAzMDQwIi8+Cjx0ZXh0IHg9IjQwIiB5PSI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzhCNUM2RiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0Ij4kTUlORUNSRUZUPjwvdGV4dD4KPC9zdmc+';
-            
-            const skinUrl = uuid ? 
-                `https://crafatar.com/renders/body/${uuid}?overlay=true&size=80` : 
-                fallbackImage;
             
             playerItem.innerHTML = `
                 <img src="${skinUrl}" 
