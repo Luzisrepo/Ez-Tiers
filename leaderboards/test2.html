@@ -343,32 +343,26 @@
             gap: 1rem;
         }
 
+        /* Minecraft Body Render Styles - Updated to match tier-based leaderboard */
         .player-body-render {
-            width: 80px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            overflow: hidden;
-            background: rgba(30, 30, 46, 0.5);
+            height: 80px;
+            width: auto;
+            margin-right: 12px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
             transition: all 0.3s ease;
+            image-rendering: pixelated;
         }
 
-        .player-body-render img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-        }
-
-        .leaderboard-row:hover .player-body-render {
+        .player-body-render:hover {
+            border-color: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
             transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
         }
 
         .player-name {
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text-primary);
             font-size: 1.1rem;
         }
@@ -537,8 +531,7 @@
             }
             
             .player-body-render {
-                width: 60px;
-                height: 90px;
+                height: 60px;
             }
         }
 
@@ -556,8 +549,7 @@
             }
             
             .player-body-render {
-                width: 50px;
-                height: 75px;
+                height: 50px;
             }
             
             .player-info {
@@ -643,6 +635,9 @@
             'HT1': { name: 'High Tier 1', score: 10 }
         };
         
+        // UUID cache to avoid repeated API calls
+        const uuidCache = new Map();
+        
         // Current state
         let leaderboardData = [];
         let filteredData = [];
@@ -688,53 +683,41 @@
             retina_detect: true
         });
 
-        // Function to get UUID for a player using Crafatar's UUID API
-        async function getPlayerUUID(username) {
+        // Function to get UUID from username with multiple API fallbacks
+        async function getUUID(username) {
+            // Check cache first
+            if (uuidCache.has(username)) {
+                return uuidCache.get(username);
+            }
+            
             try {
-                // Use Crafatar's API to get UUID (more reliable than Mojang)
-                const response = await fetch(`https://crafatar.com/avatars/${username}?size=8&overlay=true`);
-                
-                // If we get a successful response, the UUID is in the URL
-                if (response.ok) {
-                    // Extract UUID from the response URL
-                    const uuidMatch = response.url.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
-                    if (uuidMatch) {
-                        return uuidMatch[0];
-                    }
-                }
-                
-                // Alternative: Try Mojang API as fallback
-                const mojangResponse = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
-                if (mojangResponse.ok) {
-                    const data = await mojangResponse.json();
-                    // Format UUID with dashes
-                    const formattedUUID = data.id.replace(
-                        /(.{8})(.{4})(.{4})(.{4})(.{12})/,
-                        "$1-$2-$3-$4-$5"
-                    );
-                    return formattedUUID;
-                }
+                // Try Mojang API first
+                const response = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+                if (!response.ok) throw new Error('Player not found in Mojang API');
+                const data = await response.json();
+                uuidCache.set(username, data.id);
+                return data.id;
             } catch (error) {
-                console.error(`Error fetching UUID for ${username}:`, error);
-            }
-            
-            // Generate a consistent UUID based on username as last resort
-            // This ensures each player gets a unique but consistent UUID
-            function nameToUUID(name) {
-                // Simple hash function to generate consistent UUID-like string
-                let hash = 0;
-                for (let i = 0; i < name.length; i++) {
-                    const char = name.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
+                console.warn(`Mojang API failed for ${username}, trying fallback:`, error);
+                
+                // Fallback to MineTools API 
+                try {
+                    const fallbackResponse = await fetch(`https://api.minetools.eu/uuid/${username}`);
+                    if (!fallbackResponse.ok) throw new Error('Fallback API failed');
+                    const fallbackData = await fallbackResponse.json();
+                    if (fallbackData.id) {
+                        uuidCache.set(username, fallbackData.id);
+                        return fallbackData.id;
+                    }
+                } catch (fallbackError) {
+                    console.error(`All UUID APIs failed for ${username}:`, fallbackError);
                 }
                 
-                // Format as UUID
-                const hex = Math.abs(hash).toString(16).padStart(32, '0');
-                return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
+                // Use fallback UUID for cracked players
+                const fallbackUUID = "8667ba71-b85a-4004-af54-457a9734eed7";
+                uuidCache.set(username, fallbackUUID);
+                return fallbackUUID;
             }
-            
-            return nameToUUID(username);
         }
 
         // Function to get all game modes from database
@@ -852,31 +835,22 @@
                 
                 console.log('Players with averages:', playersWithAverages);
                 
-                // Get UUIDs for all players using Crafatar
+                // Get UUIDs for all players using the same system as tier-based leaderboards
                 const playersWithUUIDs = [];
                 for (const player of playersWithAverages) {
                     try {
-                        const uuid = await getPlayerUUID(player.name);
+                        const uuid = await getUUID(player.name);
                         playersWithUUIDs.push({
                             ...player,
                             uuid: uuid
                         });
                     } catch (error) {
                         console.error(`Failed to get UUID for ${player.name}:`, error);
-                        // Still add the player but with a generated UUID
-                        function nameToUUID(name) {
-                            let hash = 0;
-                            for (let i = 0; i < name.length; i++) {
-                                const char = name.charCodeAt(i);
-                                hash = ((hash << 5) - hash) + char;
-                                hash = hash & hash;
-                            }
-                            const hex = Math.abs(hash).toString(16).padStart(32, '0');
-                            return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
-                        }
+                        // Still add the player but with a fallback UUID
+                        const fallbackUUID = "8667ba71-b85a-4004-af54-457a9734eed7";
                         playersWithUUIDs.push({
                             ...player,
-                            uuid: nameToUUID(player.name)
+                            uuid: fallbackUUID
                         });
                     }
                 }
@@ -902,7 +876,7 @@
             }
         }
         
-        // Render the leaderboard
+        // Render the leaderboard - Updated to use the same skin system as tier-based leaderboards
         function renderLeaderboard() {
             if (filteredData.length === 0) {
                 leaderboardList.innerHTML = '<div class="no-results">No players found matching your search.</div>';
@@ -920,20 +894,29 @@
                     row.classList.add(`top-${player.rank}`);
                 }
                 
-                // Crafatar body render - using the player's UUID
-                // Use scale=3 for higher resolution and default=false to avoid Steve/Alex fallback
-                const bodyRenderUrl = `https://crafatar.com/renders/body/${player.uuid}?scale=3&overlay=true&default=false`;
+                // Use the same skin rendering system as tier-based leaderboards
+                const fallbackUUID = "8667ba71-b85a-4004-af54-457a9734eed7";
+                let skinUrl;
                 
-                // Fallback avatar in case Crafatar fails
-                const fallbackAvatar = `https://crafatar.com/avatars/${player.uuid}?size=80&overlay=true`;
+                if (player.uuid) {
+                    // Valid UUID found - use player's actual skin
+                    skinUrl = `https://crafatar.com/renders/body/${player.uuid}?overlay=true&size=80`;
+                } else {
+                    // No UUID found (cracked player) - use fallback skin
+                    skinUrl = `https://crafatar.com/renders/body/${fallbackUUID}?overlay=true&size=80`;
+                }
+                
+                // Create fallback SVG placeholder (base64 encoded)
+                const fallbackImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjMzAzMDQwIi8+Cjx0ZXh0IHg9IjQwIiB5PSI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzhCNUM2RiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0Ij4kTUlORUNSRUZUPjwvdGV4dD4KPC9zdmc+';
                 
                 row.innerHTML = `
                     <div class="rank rank-${player.rank <= 3 ? player.rank : ''}">${player.rank}</div>
                     <div class="player-info">
-                        <div class="player-body-render">
-                            <img src="${bodyRenderUrl}" alt="${player.name}" 
-                                 onerror="this.onerror=null; this.src='${fallbackAvatar}';">
-                        </div>
+                        <img src="${skinUrl}" 
+                             alt="${player.name}'s Skin" 
+                             class="player-body-render"
+                             data-username="${player.name}"
+                             onerror="this.src='${fallbackImage}'">
                         <div class="player-name">${player.name}</div>
                     </div>
                     <div class="tier-badge tier-${player.tier}">${player.tierName}</div>
