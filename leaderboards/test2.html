@@ -688,14 +688,26 @@
             retina_detect: true
         });
 
-        // Function to get UUID for a player - FIXED VERSION
+        // Function to get UUID for a player using Crafatar's UUID API
         async function getPlayerUUID(username) {
             try {
-                // Fetch UUID from Mojang API
-                const response = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+                // Use Crafatar's API to get UUID (more reliable than Mojang)
+                const response = await fetch(`https://crafatar.com/avatars/${username}?size=8&overlay=true`);
+                
+                // If we get a successful response, the UUID is in the URL
                 if (response.ok) {
-                    const data = await response.json();
-                    // Format the UUID with dashes for Crafatar
+                    // Extract UUID from the response URL
+                    const uuidMatch = response.url.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+                    if (uuidMatch) {
+                        return uuidMatch[0];
+                    }
+                }
+                
+                // Alternative: Try Mojang API as fallback
+                const mojangResponse = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+                if (mojangResponse.ok) {
+                    const data = await mojangResponse.json();
+                    // Format UUID with dashes
                     const formattedUUID = data.id.replace(
                         /(.{8})(.{4})(.{4})(.{4})(.{12})/,
                         "$1-$2-$3-$4-$5"
@@ -706,66 +718,82 @@
                 console.error(`Error fetching UUID for ${username}:`, error);
             }
             
-            // Fallback for cracked players or API errors
-            return "8667ba71-b85a-4004-af54-457a9734eed7";
+            // Generate a consistent UUID based on username as last resort
+            // This ensures each player gets a unique but consistent UUID
+            function nameToUUID(name) {
+                // Simple hash function to generate consistent UUID-like string
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) {
+                    const char = name.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                
+                // Format as UUID
+                const hex = Math.abs(hash).toString(16).padStart(32, '0');
+                return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
+            }
+            
+            return nameToUUID(username);
         }
 
         // Function to get all game modes from database
         async function getAllGameModes() {
             try {
-                // Assuming the game modes are stored in a table called 'game_modes'
+                // Get all game modes from the game_modes table
                 const { data, error } = await supabase
                     .from('game_modes')
-                    .select('id');
+                    .select('id, name, display_name');
                 
                 if (error) throw error;
                 
+                console.log('Available game modes:', data);
                 return data.map(game => game.id);
             } catch (error) {
                 console.error('Error fetching game modes:', error);
-                // Return a default set if we can't fetch from database
-                return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]; // Based on your image data
+                // Return default game modes based on your image data
+                return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
             }
         }
 
-        // Function to calculate average tier for each player - FIXED VERSION
+        // Function to calculate average tier for each player including untested gamemodes
         function calculatePlayerAverages(playerData, allGameModes) {
             const playerMap = new Map();
             const totalGameModes = allGameModes.length;
             
-            // Group player data by player name
+            // First, initialize all players with all game modes as untested (LT5)
             playerData.forEach(entry => {
                 if (!playerMap.has(entry.player_name)) {
                     playerMap.set(entry.player_name, {
                         name: entry.player_name,
-                        testedGameModes: new Set(),
-                        totalScore: 0
+                        // Start with all game modes as untested (LT5)
+                        gameModes: Object.fromEntries(allGameModes.map(id => [id, 'LT5'])),
+                        totalScore: totalGameModes * 1, // All start as LT5 (score 1)
+                        testedCount: 0
                     });
                 }
-                
+            });
+            
+            // Then, update with actual tested game modes
+            playerData.forEach(entry => {
                 const player = playerMap.get(entry.player_name);
-                
-                // Add the tested game mode
-                player.testedGameModes.add(entry.game_mode_id);
-                
-                // Handle untested gamemodes as LT5 - we'll add those later
+                const gameModeId = entry.game_mode_id;
                 const tierCode = entry.tiers?.code || 'LT5';
                 const tierScore = tiers[tierCode].score;
                 
-                // Add score for this tested game mode
-                player.totalScore += tierScore;
+                // Update this game mode with actual tier
+                if (player.gameModes[gameModeId] === 'LT5') {
+                    // If it was previously untested, update the score
+                    player.totalScore = player.totalScore - 1 + tierScore; // Remove LT5 score, add actual score
+                }
+                
+                player.gameModes[gameModeId] = tierCode;
+                player.testedCount = Object.values(player.gameModes).filter(tier => tier !== 'LT5').length;
             });
             
-            // Calculate averages including untested game modes as LT5
+            // Calculate averages and determine overall tier
             const playersWithAverages = Array.from(playerMap.values()).map(player => {
-                const testedCount = player.testedGameModes.size;
-                const untestedCount = totalGameModes - testedCount;
-                
-                // Add scores for untested game modes (each counts as LT5 = score 1)
-                const totalScoreWithUntested = player.totalScore + (untestedCount * 1);
-                
-                // Calculate average score across ALL game modes
-                const averageScore = totalScoreWithUntested / totalGameModes;
+                const averageScore = player.totalScore / totalGameModes;
                 
                 // Find the closest tier to the average score
                 let closestTier = 'LT5';
@@ -784,7 +812,7 @@
                     averageScore: averageScore,
                     overallTier: closestTier,
                     tierName: tiers[closestTier].name,
-                    testedGameModes: player.testedGameModes.size,
+                    testedGameModes: player.testedCount,
                     totalGameModes: totalGameModes
                 };
             });
@@ -793,7 +821,7 @@
             return playersWithAverages.sort((a, b) => b.averageScore - a.averageScore);
         }
         
-        // Load overall leaderboard data from Supabase - FIXED VERSION
+        // Load overall leaderboard data from Supabase
         async function loadOverallLeaderboard() {
             leaderboardList.innerHTML = '<div class="loading">Calculating overall rankings...</div>';
             
@@ -817,19 +845,41 @@
                     return;
                 }
                 
-                // Calculate player averages including untested game modes
+                console.log('Player data loaded:', playerData);
+                
+                // Calculate player averages including untested game modes as LT5
                 const playersWithAverages = calculatePlayerAverages(playerData, allGameModes);
                 
-                // Get UUIDs for all players
-                const playersWithUUIDs = await Promise.all(
-                    playersWithAverages.map(async (player) => {
+                console.log('Players with averages:', playersWithAverages);
+                
+                // Get UUIDs for all players using Crafatar
+                const playersWithUUIDs = [];
+                for (const player of playersWithAverages) {
+                    try {
                         const uuid = await getPlayerUUID(player.name);
-                        return {
+                        playersWithUUIDs.push({
                             ...player,
                             uuid: uuid
-                        };
-                    })
-                );
+                        });
+                    } catch (error) {
+                        console.error(`Failed to get UUID for ${player.name}:`, error);
+                        // Still add the player but with a generated UUID
+                        function nameToUUID(name) {
+                            let hash = 0;
+                            for (let i = 0; i < name.length; i++) {
+                                const char = name.charCodeAt(i);
+                                hash = ((hash << 5) - hash) + char;
+                                hash = hash & hash;
+                            }
+                            const hex = Math.abs(hash).toString(16).padStart(32, '0');
+                            return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}`;
+                        }
+                        playersWithUUIDs.push({
+                            ...player,
+                            uuid: nameToUUID(player.name)
+                        });
+                    }
+                }
                 
                 // Assign ranks
                 leaderboardData = playersWithUUIDs.map((player, index) => ({
@@ -871,16 +921,18 @@
                 }
                 
                 // Crafatar body render - using the player's UUID
-                const bodyRenderUrl = `https://crafatar.com/renders/body/${player.uuid}?scale=2&overlay=true`;
+                // Use scale=3 for higher resolution and default=false to avoid Steve/Alex fallback
+                const bodyRenderUrl = `https://crafatar.com/renders/body/${player.uuid}?scale=3&overlay=true&default=false`;
                 
                 // Fallback avatar in case Crafatar fails
-                const fallbackAvatar = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMzAzMDQwIi8+Cjx0ZXh0IHg9IjMyIiB5PSIzOCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+MoTwvdGV4dD4KPC9zdmc+`;
+                const fallbackAvatar = `https://crafatar.com/avatars/${player.uuid}?size=80&overlay=true`;
                 
                 row.innerHTML = `
                     <div class="rank rank-${player.rank <= 3 ? player.rank : ''}">${player.rank}</div>
                     <div class="player-info">
                         <div class="player-body-render">
-                            <img src="${bodyRenderUrl}" alt="${player.name}" onerror="this.src='${fallbackAvatar}'">
+                            <img src="${bodyRenderUrl}" alt="${player.name}" 
+                                 onerror="this.onerror=null; this.src='${fallbackAvatar}';">
                         </div>
                         <div class="player-name">${player.name}</div>
                     </div>
