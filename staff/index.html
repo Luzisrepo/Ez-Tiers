@@ -5,46 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EZ Tiers - Staff Panel</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.86/build/spline-viewer.js"></script>
     <style>
         :root {
-            --primary-purple: #6a0dad;
-            --dark-purple: #4b0082;
-            --darker-purple: #2d0049;
-            --light-purple: #8a2be2;
-            --accent-purple: #9370db;
-            --text-color: #f0e6ff;
-            --card-bg: rgba(45, 0, 73, 0.7);
-            --border-radius: 12px;
-            --transition: all 0.3s ease;
+            --primary-accent: #7c3aed;
+            --dark-bg: #0f0f1a;
+            --darker-bg: #090912;
+            --card-bg: rgba(30, 30, 46, 0.7);
+            --card-border: rgba(124, 58, 237, 0.2);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --success: #10b981;
+            --error: #ef4444;
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
-            background-color: var(--darker-purple);
-            color: var(--text-color);
+            background-color: var(--darker-bg);
+            color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
         }
 
-        #particle-canvas {
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .spline-background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
+            opacity: 0.9;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
+            animation: slideUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         header {
@@ -56,28 +79,30 @@
         .logo {
             font-size: 3.5rem;
             font-weight: 800;
-            background: linear-gradient(45deg, #8a2be2, #9370db, #6a0dad);
+            background: linear-gradient(45deg, #7c3aed, #8b5cf6, #a78bfa);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin-bottom: 0.5rem;
-            text-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+            text-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
             animation: glow 3s ease-in-out infinite alternate;
         }
 
         @keyframes glow {
             from {
-                text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+                text-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
             }
             to {
-                text-shadow: 0 0 20px rgba(138, 43, 226, 0.8), 0 0 30px rgba(138, 43, 226, 0.6);
+                text-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 30px rgba(124, 58, 237, 0.3);
             }
         }
 
         .subtitle {
             font-size: 1.2rem;
-            color: var(--accent-purple);
+            color: var(--text-secondary);
             margin-bottom: 2rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
         }
 
         .panels-container {
@@ -94,26 +119,32 @@
             width: 100%;
             max-width: 550px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--light-purple);
+            border: 1px solid var(--card-border);
             transition: var(--transition);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+
+        .panel:nth-child(2) {
+            animation-delay: 0.6s;
         }
 
         .panel:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            border-color: var(--accent-purple);
+            border-color: rgba(124, 58, 237, 0.4);
         }
 
         .panel-header {
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid var(--light-purple);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.2);
         }
 
         .panel-title {
             font-size: 1.8rem;
-            background: linear-gradient(45deg, #8a2be2, #9370db);
+            background: linear-gradient(45deg, #7c3aed, #8b5cf6);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -122,50 +153,65 @@
 
         .form-group {
             margin-bottom: 1.2rem;
+            animation: fadeIn 0.6s ease-out both;
         }
+
+        .form-group:nth-child(1) { animation-delay: 0.5s; }
+        .form-group:nth-child(2) { animation-delay: 0.6s; }
+        .form-group:nth-child(3) { animation-delay: 0.7s; }
+        .form-group:nth-child(4) { animation-delay: 0.8s; }
+        .form-group:nth-child(5) { animation-delay: 0.9s; }
+        .form-group:nth-child(6) { animation-delay: 1.0s; }
+        .form-group:nth-child(7) { animation-delay: 1.1s; }
+        .form-group:nth-child(8) { animation-delay: 1.2s; }
 
         label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-            color: var(--accent-purple);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
         }
 
         input, select {
             width: 100%;
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--light-purple);
-            background: rgba(45, 0, 73, 0.5);
-            color: var(--text-color);
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            background: rgba(15, 15, 26, 0.5);
+            color: var(--text-primary);
             font-size: 1rem;
             transition: var(--transition);
         }
 
         input:focus, select:focus {
             outline: none;
-            border-color: var(--accent-purple);
-            box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.3);
+            border-color: rgba(124, 58, 237, 0.5);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+            background: rgba(15, 15, 26, 0.7);
         }
 
         .submit-btn {
-            background: linear-gradient(45deg, var(--primary-purple), var(--light-purple));
+            background: linear-gradient(45deg, var(--primary-accent), #8b5cf6);
             color: white;
             border: none;
-            padding: 0.9rem 1.5rem;
-            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
             width: 100%;
             margin-top: 1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+            animation: fadeIn 0.6s ease-out 1.3s both;
         }
 
         .submit-btn:hover {
-            background: linear-gradient(45deg, var(--light-purple), var(--primary-purple));
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+            background: linear-gradient(45deg, #8b5cf6, var(--primary-accent));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
         }
 
         .submit-btn:active {
@@ -173,8 +219,8 @@
         }
 
         .confirmation {
-            background: rgba(106, 13, 173, 0.2);
-            border: 1px solid var(--light-purple);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: var(--border-radius);
             padding: 1rem;
             margin-top: 1.5rem;
@@ -182,6 +228,8 @@
             opacity: 0;
             transform: translateY(10px);
             transition: var(--transition);
+            color: var(--success);
+            backdrop-filter: blur(10px);
         }
 
         .confirmation.show {
@@ -193,8 +241,9 @@
             text-align: center;
             margin-top: 3rem;
             padding: 1.5rem;
-            color: var(--accent-purple);
+            color: var(--text-secondary);
             font-size: 0.9rem;
+            animation: fadeIn 0.6s ease-out 1.4s both;
         }
 
         @media (max-width: 768px) {
@@ -210,11 +259,15 @@
             .logo {
                 font-size: 2.5rem;
             }
+            
+            .container {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="particle-canvas"></div>
+    <spline-viewer class="spline-background" url="https://prod.spline.design/Hd4ZJvNLOCUfhUy2/scene.splinecode"></spline-viewer>
     
     <div class="container">
         <header>
@@ -242,11 +295,16 @@
                         <label for="normal-gamemode">Gamemode</label>
                         <select id="normal-gamemode" required>
                             <option value="">Select Gamemode</option>
-                            <option value="BedWars">BedWars</option>
-                            <option value="SkyWars">SkyWars</option>
-                            <option value="Duels">Duels</option>
+                            <option value="Sword">Sword</option>
+                            <option value="Axe">Axe</option>
+                            <option value="BedWars">Bedwars</option>
                             <option value="UHC">UHC</option>
-                            <option value="MegaWalls">MegaWalls</option>
+                            <option value="Nethpot">Nethpot</option>
+                            <option value="DiaPot">Diapot</option>
+                            <option value="SMP">SMP</option>
+                            <option value="DiaSMP">Dia SMP</option>
+                            <option value="Bridge">Bridge</option>
+                            <option value="Sumo">Sumo</option>
                         </select>
                     </div>
                     
@@ -358,60 +416,6 @@
     </div>
 
     <script>
-        // Three.js Particle Background
-        function initParticleBackground() {
-            const canvas = document.getElementById('particle-canvas');
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-            
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            
-            // Create particles
-            const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 1500;
-            
-            const posArray = new Float32Array(particlesCount * 3);
-            
-            for (let i = 0; i < particlesCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * 10;
-            }
-            
-            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            
-            // Purple particle material
-            const particlesMaterial = new THREE.PointsMaterial({
-                size: 0.015,
-                color: new THREE.Color(0x8a2be2),
-                transparent: true,
-                opacity: 0.6
-            });
-            
-            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-            scene.add(particlesMesh);
-            
-            camera.position.z = 3;
-            
-            // Animation
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                particlesMesh.rotation.x += 0.0005;
-                particlesMesh.rotation.y += 0.001;
-                
-                renderer.render(scene, camera);
-            }
-            
-            animate();
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-        
         // Webhook URLs
         const NORMAL_WEBHOOK = "https://discord.com/api/webhooks/1431766991542161591/3NsdQAcPxgO6xP5y_AD9FW6rWB1aMP3z3a577AqFShOiKYOYni26jyw6R9aA5YtWP4jG";
         const HIGH_WEBHOOK = "https://discord.com/api/webhooks/1431767143871156227/7_4cmtZ0NgRsHa9Mqgbx8-3wExrqK104z-AFQKWBySlV31IMoHCYrt4mth3K61pX5FhN";
@@ -534,11 +538,6 @@
                 alert('Error submitting results. Please try again.');
             });
         }
-        
-        // Initialize the page
-        window.addEventListener('DOMContentLoaded', () => {
-            initParticleBackground();
-        });
     </script>
 </body>
 </html>
