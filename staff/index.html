@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZ Tiers - Staff Panel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary-purple: #6a0dad;
+            --dark-purple: #4b0082;
+            --darker-purple: #2d0049;
+            --light-purple: #8a2be2;
+            --accent-purple: #9370db;
+            --text-color: #f0e6ff;
+            --card-bg: rgba(45, 0, 73, 0.7);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--darker-purple);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 2rem;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #8a2be2, #9370db, #6a0dad);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(138, 43, 226, 0.8), 0 0 30px rgba(138, 43, 226, 0.6);
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--accent-purple);
+            margin-bottom: 2rem;
+        }
+
+        .panels-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--light-purple);
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent-purple);
+        }
+
+        .panel-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--light-purple);
+        }
+
+        .panel-title {
+            font-size: 1.8rem;
+            background: linear-gradient(45deg, #8a2be2, #9370db);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--accent-purple);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--light-purple);
+            background: rgba(45, 0, 73, 0.5);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.3);
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, var(--primary-purple), var(--light-purple));
+            color: white;
+            border: none;
+            padding: 0.9rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(45deg, var(--light-purple), var(--primary-purple));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .confirmation {
+            background: rgba(106, 13, 173, 0.2);
+            border: 1px solid var(--light-purple);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-top: 1.5rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+
+        .confirmation.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem;
+            color: var(--accent-purple);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .panels-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .panel {
+                width: 100%;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particle-canvas"></div>
+    
+    <div class="container">
+        <header>
+            <h1 class="logo">EZ Tiers</h1>
+            <p class="subtitle">Staff Panel - Tier Testing Results</p>
+        </header>
+        
+        <div class="panels-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Normal Results</h2>
+                </div>
+                <form id="normal-form">
+                    <div class="form-group">
+                        <label for="normal-examinee">Examinee</label>
+                        <input type="text" id="normal-examinee" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="normal-tester">Tester</label>
+                        <input type="text" id="normal-tester" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="normal-gamemode">Gamemode</label>
+                        <select id="normal-gamemode" required>
+                            <option value="">Select Gamemode</option>
+                            <option value="BedWars">BedWars</option>
+                            <option value="SkyWars">SkyWars</option>
+                            <option value="Duels">Duels</option>
+                            <option value="UHC">UHC</option>
+                            <option value="MegaWalls">MegaWalls</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="normal-tier-tested">Tier Tested For</label>
+                        <input type="text" id="normal-tier-tested" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="normal-previous-tier">Previous Tier</label>
+                        <input type="text" id="normal-previous-tier" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="normal-score">Score</label>
+                        <input type="text" id="normal-score" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="normal-result">Result</label>
+                        <select id="normal-result" required>
+                            <option value="">Select Result</option>
+                            <option value="Passed">Passed</option>
+                            <option value="Failed">Failed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="normal-recording">Recording Link</label>
+                        <input type="url" id="normal-recording" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit Normal Results</button>
+                    
+                    <div class="confirmation" id="normal-confirmation">
+                        Results submitted successfully!
+                    </div>
+                </form>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">High Results</h2>
+                </div>
+                <form id="high-form">
+                    <div class="form-group">
+                        <label for="high-examinee">Examinee</label>
+                        <input type="text" id="high-examinee" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="high-tester">Tester</label>
+                        <input type="text" id="high-tester" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="high-gamemode">Gamemode</label>
+                        <select id="high-gamemode" required>
+                            <option value="">Select Gamemode</option>
+                            <option value="BedWars">BedWars</option>
+                            <option value="SkyWars">SkyWars</option>
+                            <option value="Duels">Duels</option>
+                            <option value="UHC">UHC</option>
+                            <option value="MegaWalls">MegaWalls</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="high-tier-tested">Tier Tested For</label>
+                        <input type="text" id="high-tier-tested" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="high-previous-tier">Previous Tier</label>
+                        <input type="text" id="high-previous-tier" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="high-score">Score</label>
+                        <input type="text" id="high-score" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="high-result">Result</label>
+                        <select id="high-result" required>
+                            <option value="">Select Result</option>
+                            <option value="Passed">Passed</option>
+                            <option value="Failed">Failed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="high-recording">Recording Link</label>
+                        <input type="url" id="high-recording" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit High Results</button>
+                    
+                    <div class="confirmation" id="high-confirmation">
+                        Results submitted successfully!
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <footer>
+            <p>EZ Tiers Staff Panel &copy; 2023 | For authorized personnel only</p>
+        </footer>
+    </div>
+
+    <script>
+        // Three.js Particle Background
+        function initParticleBackground() {
+            const canvas = document.getElementById('particle-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Create particles
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 1500;
+            
+            const posArray = new Float32Array(particlesCount * 3);
+            
+            for (let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 10;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            // Purple particle material
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.015,
+                color: new THREE.Color(0x8a2be2),
+                transparent: true,
+                opacity: 0.6
+            });
+            
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 3;
+            
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                particlesMesh.rotation.x += 0.0005;
+                particlesMesh.rotation.y += 0.001;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // Webhook URLs
+        const NORMAL_WEBHOOK = "https://discord.com/api/webhooks/1431766991542161591/3NsdQAcPxgO6xP5y_AD9FW6rWB1aMP3z3a577AqFShOiKYOYni26jyw6R9aA5YtWP4jG";
+        const HIGH_WEBHOOK = "https://discord.com/api/webhooks/1431767143871156227/7_4cmtZ0NgRsHa9Mqgbx8-3wExrqK104z-AFQKWBySlV31IMoHCYrt4mth3K61pX5FhN";
+        
+        // Form submission handlers
+        document.getElementById('normal-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm('normal', this);
+        });
+        
+        document.getElementById('high-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm('high', this);
+        });
+        
+        function submitForm(type, form) {
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // Get all form values
+            const examinee = document.getElementById(`${type}-examinee`).value;
+            const tester = document.getElementById(`${type}-tester`).value;
+            const gamemode = document.getElementById(`${type}-gamemode`).value;
+            const tierTested = document.getElementById(`${type}-tier-tested`).value;
+            const previousTier = document.getElementById(`${type}-previous-tier`).value;
+            const score = document.getElementById(`${type}-score`).value;
+            const result = document.getElementById(`${type}-result`).value;
+            const recording = document.getElementById(`${type}-recording`).value;
+            
+            // Determine color based on result
+            const color = result === 'Passed' ? 3066993 : 15158332; // Green for passed, red for failed
+            
+            // Create Discord embed
+            const embed = {
+                title: `Tier Test ${result} - ${gamemode}`,
+                color: color,
+                fields: [
+                    {
+                        name: "Examinee",
+                        value: examinee,
+                        inline: true
+                    },
+                    {
+                        name: "Tester",
+                        value: tester,
+                        inline: true
+                    },
+                    {
+                        name: "Gamemode",
+                        value: gamemode,
+                        inline: true
+                    },
+                    {
+                        name: "Tier Tested For",
+                        value: tierTested,
+                        inline: true
+                    },
+                    {
+                        name: "Previous Tier",
+                        value: previousTier,
+                        inline: true
+                    },
+                    {
+                        name: "Score",
+                        value: score,
+                        inline: true
+                    },
+                    {
+                        name: "Result",
+                        value: result,
+                        inline: true
+                    },
+                    {
+                        name: "Recording",
+                        value: `[View Recording](${recording})`,
+                        inline: false
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: `EZ Tiers ${type.charAt(0).toUpperCase() + type.slice(1)} Results`
+                }
+            };
+            
+            // Send to Discord webhook
+            const webhookURL = type === 'normal' ? NORMAL_WEBHOOK : HIGH_WEBHOOK;
+            
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    embeds: [embed]
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Show confirmation message
+                    const confirmation = document.getElementById(`${type}-confirmation`);
+                    confirmation.classList.add('show');
+                    
+                    // Reset form
+                    form.reset();
+                    
+                    // Hide confirmation after 3 seconds
+                    setTimeout(() => {
+                        confirmation.classList.remove('show');
+                    }, 3000);
+                } else {
+                    alert('Error submitting results. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error submitting results. Please try again.');
+            });
+        }
+        
+        // Initialize the page
+        window.addEventListener('DOMContentLoaded', () => {
+            initParticleBackground();
+        });
+    </script>
+</body>
+</html>
