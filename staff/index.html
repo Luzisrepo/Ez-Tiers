@@ -6,6 +6,7 @@
   <title>EZ Tiers - Staff Panel</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.86/build/spline-viewer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --primary-accent: #7c3aed;
@@ -16,6 +17,7 @@
       --text-primary: #f8fafc;
       --text-secondary: #cbd5e1;
       --success: #10b981;
+      --error: #ef4444;
       --border-radius: 16px;
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -144,12 +146,180 @@
       transition: var(--transition);
     }
     .confirmation.show { opacity: 1; transform: translateY(0); }
+
+    /* Login Modal Styles */
+    .login-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(9, 9, 18, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .login-container {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 2.5rem;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 1px solid var(--card-border);
+      text-align: center;
+      animation: modalSlideIn 0.5s ease-out forwards;
+    }
+
+    @keyframes modalSlideIn {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-logo {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(45deg, #7c3aed, #8b5cf6, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .login-form {
+      margin-top: 1.5rem;
+    }
+
+    .login-btn {
+      background: linear-gradient(45deg, var(--primary-accent), #8b5cf6);
+      color: white;
+      border: none;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(124,58,237,0.3);
+      transition: var(--transition);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124,58,237,0.4);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      text-align: center;
+      color: var(--error);
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: var(--transition);
+    }
+
+    .error-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .user-info {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary-accent), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+    }
+
+    .logout-btn {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--error);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(124,58,237,0.2);
+    }
   </style>
 </head>
 <body>
   <spline-viewer class="spline-background" url="https://prod.spline.design/Hd4ZJvNLOCUfhUy2/scene.splinecode"></spline-viewer>
 
-  <div class="container">
+  <!-- Login Modal -->
+  <div class="login-modal" id="login-modal">
+    <div class="login-container">
+      <h1 class="login-logo">EZ Tiers</h1>
+      <h2 class="login-title">Staff Login</h2>
+      <form class="login-form" id="login-form">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required>
+        </div>
+        <button type="submit" class="login-btn">Login</button>
+        <div class="error-message" id="login-error">Invalid credentials. Please try again.</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Content (Hidden until logged in) -->
+  <div class="container hidden" id="main-content">
+    <div class="user-info" id="user-info">
+      <div class="user-avatar" id="user-avatar">U</div>
+      <button class="logout-btn" id="logout-btn">Logout</button>
+    </div>
+    
     <header>
       <h1 class="logo">EZ Tiers</h1>
       <p class="subtitle">Staff Panel - Tier Testing Results</p>
@@ -288,9 +458,87 @@
   </div>
 
   <script>
+    // Supabase configuration
+    const supabaseUrl = 'https://dkfimhcwiufignzfqnxm.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmltaGN3aXVmaWduemZxbnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5OTc3MjQsImV4cCI6MjA3NDU3MzcyNH0.lOtCk4v3fkd1DJfvpqrv-NgyByNhEsaHeL4GEqGrQa8';
+    
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    
+    // Discord webhooks
     const NORMAL_WEBHOOK = "https://discord.com/api/webhooks/1431766991542161591/3NsdQAcPxgO6xP5y_AD9FW6rWB1aMP3z3a577AqFShOiKYOYni26jyw6R9aA5YtWP4jG";
     const HIGH_WEBHOOK = "https://discord.com/api/webhooks/1431767143871156227/7_4cmtZ0NgRsHa9Mqgbx8-3wExrqK104z-AFQKWBySlV31IMoHCYrt4mth3K61pX5FhN";
 
+    // DOM elements
+    const loginModal = document.getElementById('login-modal');
+    const mainContent = document.getElementById('main-content');
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+    const logoutBtn = document.getElementById('logout-btn');
+    const userAvatar = document.getElementById('user-avatar');
+
+    // Check if user is already logged in
+    async function checkAuthStatus() {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // User is logged in, show main content
+        showMainContent(session.user);
+      } else {
+        // No session, show login modal
+        loginModal.classList.remove('hidden');
+      }
+    }
+
+    // Handle login form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        // Show error message
+        loginError.classList.add('show');
+        setTimeout(() => {
+          loginError.classList.remove('show');
+        }, 3000);
+      } else {
+        // Login successful
+        showMainContent(data.user);
+      }
+    });
+
+    // Handle logout
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      mainContent.classList.add('hidden');
+      loginModal.classList.remove('hidden');
+      loginForm.reset();
+    });
+
+    // Show main content after successful login
+    function showMainContent(user) {
+      // Set user avatar initial
+      if (user.email) {
+        userAvatar.textContent = user.email.charAt(0).toUpperCase();
+      }
+      
+      loginModal.classList.add('hidden');
+      mainContent.classList.remove('hidden');
+    }
+
+    // Check auth status on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuthStatus();
+    });
+
+    // Form submission handlers
     document.getElementById("normal-form").addEventListener("submit", e => { e.preventDefault(); submitForm("normal"); });
     document.getElementById("high-form").addEventListener("submit", e => { e.preventDefault(); submitForm("high"); });
 
