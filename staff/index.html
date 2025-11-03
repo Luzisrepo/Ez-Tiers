@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EZ Tiers - Staff Panel</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.86/build/spline-viewer.js"></script>
@@ -36,19 +36,13 @@
       animation: fadeIn 0.8s ease-out forwards;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     .spline-background {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      opacity: 0.9;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1; opacity: 0.9;
     }
 
     .container {
@@ -58,54 +52,31 @@
       animation: slideUp 0.8s ease-out 0.2s both;
     }
 
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-    header {
-      text-align: center;
-      margin-bottom: 3rem;
-      padding-top: 2rem;
-    }
-
+    header { text-align: center; margin-bottom: 3rem; padding-top: 2rem; }
     .logo {
-      font-size: 3.5rem;
-      font-weight: 800;
+      font-size: 3.5rem; font-weight: 800;
       background: linear-gradient(45deg, #7c3aed, #8b5cf6, #a78bfa);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
       margin-bottom: 0.5rem;
       text-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
       animation: glow 3s ease-in-out infinite alternate;
     }
-
     @keyframes glow {
       from { text-shadow: 0 0 10px rgba(124, 58, 237, 0.3); }
       to { text-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 30px rgba(124, 58, 237, 0.3); }
     }
 
-    .subtitle {
-      font-size: 1.2rem;
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-    }
-
-    .panels-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      justify-content: center;
-    }
+    .subtitle { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 2rem; }
+    .panels-container { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; }
 
     .panel {
       background: var(--card-bg);
       border-radius: var(--border-radius);
       padding: 2rem;
-      width: 100%;
-      max-width: 550px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      width: 100%; max-width: 550px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       border: 1px solid var(--card-border);
       transition: var(--transition);
       backdrop-filter: blur(12px);
@@ -113,14 +84,14 @@
 
     .panel:hover {
       transform: translateY(-8px);
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-      border-color: rgba(124, 58, 237, 0.4);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+      border-color: rgba(124,58,237,0.4);
     }
 
     .panel-header {
       margin-bottom: 1.5rem;
       padding-bottom: 1rem;
-      border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+      border-bottom: 1px solid rgba(124,58,237,0.2);
     }
 
     .panel-title {
@@ -138,8 +109,8 @@
       width: 100%;
       padding: 0.9rem 1.2rem;
       border-radius: 10px;
-      border: 1px solid rgba(124, 58, 237, 0.2);
-      background: rgba(15, 15, 26, 0.5);
+      border: 1px solid rgba(124,58,237,0.2);
+      background: rgba(15,15,26,0.5);
       color: var(--text-primary);
       font-size: 1rem;
     }
@@ -156,12 +127,12 @@
       width: 100%;
       margin-top: 1rem;
       letter-spacing: 0.5px;
-      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+      box-shadow: 0 4px 15px rgba(124,58,237,0.3);
     }
 
     .confirmation {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
       border-radius: var(--border-radius);
       padding: 1rem;
       margin-top: 1.5rem;
@@ -190,26 +161,60 @@
         <div class="panel-header"><h2 class="panel-title">Normal Results</h2></div>
         <form id="normal-form">
           <div class="form-group"><label>Tester</label><input type="text" id="normal-tester" required></div>
-          <div class="form-group"><label>Region</label><input type="text" id="normal-region" required></div>
+
+          <div class="form-group">
+            <label>Region</label>
+            <select id="normal-region" required>
+              <option value="">Select Region</option>
+              <option value="AS">AS</option>
+              <option value="EU">EU</option>
+              <option value="NA">NA</option>
+            </select>
+          </div>
+
           <div class="form-group"><label>Username</label><input type="text" id="normal-username" required></div>
-          <div class="form-group"><label>Previous Tier</label><input type="text" id="normal-previous-tier" required></div>
-          <div class="form-group"><label>Tier Given</label><input type="text" id="normal-tier-given" required></div>
+
+          <div class="form-group">
+            <label>Previous Tier</label>
+            <select id="normal-previous-tier" required>
+              <option value="">Select Previous Tier</option>
+              <option>LT5</option><option>HT5</option>
+              <option>LT4</option><option>HT4</option>
+              <option>LT3</option><option>HT3</option>
+              <option>LT2</option><option>HT2</option>
+              <option>LT1</option><option>HT1</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Tier Given</label>
+            <select id="normal-tier-given" required>
+              <option value="">Select Tier Given</option>
+              <option>LT5</option><option>HT5</option>
+              <option>LT4</option><option>HT4</option>
+              <option>LT3</option><option>HT3</option>
+              <option>LT2</option><option>HT2</option>
+              <option>LT1</option><option>HT1</option>
+            </select>
+          </div>
+
           <div class="form-group">
             <label>Gamemode</label>
             <select id="normal-gamemode" required>
               <option value="">Select Gamemode</option>
-                            <option value="Sword">Sword</option>
-                            <option value="Axe">Axe</option>
-                            <option value="BedWars">Bedwars</option>
-                            <option value="UHC">UHC</option>
-                            <option value="Nethpot">Nethpot</option>
-                            <option value="DiaPot">Diapot</option>
-                            <option value="SMP">SMP</option>
-                            <option value="DiaSMP">Dia SMP</option>
-                            <option value="Bridge">Bridge</option>
-                            <option value="Sumo">Sumo</option>
+              <option value="Sword">Sword</option>
+              <option value="Axe">Axe</option>
+              <option value="BedWars">Bedwars</option>
+              <option value="UHC">UHC</option>
+              <option value="Nethpot">Nethpot</option>
+              <option value="DiaPot">Diapot</option>
+              <option value="SMP">SMP</option>
+              <option value="DiaSMP">Dia SMP</option>
+              <option value="Bridge">Bridge</option>
+              <option value="Sumo">Sumo</option>
             </select>
           </div>
+
           <button type="submit" class="submit-btn">Submit Normal Results</button>
           <div class="confirmation" id="normal-confirmation">Results submitted successfully!</div>
         </form>
@@ -220,27 +225,65 @@
         <div class="panel-header"><h2 class="panel-title">High Results</h2></div>
         <form id="high-form">
           <div class="form-group"><label>Tester</label><input type="text" id="high-tester" required></div>
-          <div class="form-group"><label>Region</label><input type="text" id="high-region" required></div>
+
+          <div class="form-group">
+            <label>Region</label>
+            <select id="high-region" required>
+              <option value="">Select Region</option>
+              <option value="AS">AS</option>
+              <option value="EU">EU</option>
+              <option value="NA">NA</option>
+            </select>
+          </div>
+
           <div class="form-group"><label>Username</label><input type="text" id="high-username" required></div>
-          <div class="form-group"><label>Previous Tier</label><input type="text" id="high-previous-tier" required></div>
-          <div class="form-group"><label>Tier Given</label><input type="text" id="high-tier-given" required></div>
+
+          <div class="form-group">
+            <label>Previous Tier</label>
+            <select id="high-previous-tier" required>
+              <option value="">Select Previous Tier</option>
+              <option>LT5</option><option>HT5</option>
+              <option>LT4</option><option>HT4</option>
+              <option>LT3</option><option>HT3</option>
+              <option>LT2</option><option>HT2</option>
+              <option>LT1</option><option>HT1</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Tier Given</label>
+            <select id="high-tier-given" required>
+              <option value="">Select Tier Given</option>
+              <option>LT5</option><option>HT5</option>
+              <option>LT4</option><option>HT4</option>
+              <option>LT3</option><option>HT3</option>
+              <option>LT2</option><option>HT2</option>
+              <option>LT1</option><option>HT1</option>
+            </select>
+          </div>
+
           <div class="form-group">
             <label>Gamemode</label>
             <select id="high-gamemode" required>
               <option value="">Select Gamemode</option>
-              <option value="BedWars">BedWars</option>
-              <option value="SkyWars">SkyWars</option>
-              <option value="Duels">Duels</option>
+              <option value="Sword">Sword</option>
+              <option value="Axe">Axe</option>
+              <option value="BedWars">Bedwars</option>
               <option value="UHC">UHC</option>
-              <option value="MegaWalls">MegaWalls</option>
+              <option value="Nethpot">Nethpot</option>
+              <option value="DiaPot">Diapot</option>
+              <option value="SMP">SMP</option>
+              <option value="DiaSMP">Dia SMP</option>
+              <option value="Bridge">Bridge</option>
+              <option value="Sumo">Sumo</option>
             </select>
           </div>
+
           <button type="submit" class="submit-btn">Submit High Results</button>
           <div class="confirmation" id="high-confirmation">Results submitted successfully!</div>
         </form>
       </div>
     </div>
-
     <footer><p>EZ Tiers Staff Panel &copy; 2025 | For authorized personnel only</p></footer>
   </div>
 
