@@ -244,6 +244,86 @@
       border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
+    /* Loading animation */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(139, 92, 246, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .skeleton-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      box-shadow: var(--card-shadow);
+      animation: pulse 2s infinite;
+    }
+
+    .skeleton-rank {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(139, 92, 246, 0.15);
+    }
+
+    .skeleton-player-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    .skeleton-avatar {
+      height: 64px;
+      width: 48px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .skeleton-name {
+      height: 20px;
+      width: 120px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .skeleton-icons {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .skeleton-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
     @media (max-width: 700px) {
       .leaderboard-row {
         flex-direction: column;
@@ -277,7 +357,43 @@
     </div>
 
     <div class="leaderboard-list" id="leaderboardList">
-      <div class="loading">Loading leaderboard...</div>
+      <!-- Skeleton loading rows -->
+      <div class="skeleton-row">
+        <div class="skeleton-rank"></div>
+        <div class="skeleton-player-info">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-name"></div>
+        </div>
+        <div class="skeleton-icons">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-icon"></div>
+        </div>
+      </div>
+      <div class="skeleton-row">
+        <div class="skeleton-rank"></div>
+        <div class="skeleton-player-info">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-name"></div>
+        </div>
+        <div class="skeleton-icons">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-icon"></div>
+        </div>
+      </div>
+      <div class="skeleton-row">
+        <div class="skeleton-rank"></div>
+        <div class="skeleton-player-info">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-name"></div>
+        </div>
+        <div class="skeleton-icons">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-icon"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -309,31 +425,107 @@
     'HT1': { score: 10, color: '#0891b2' }
   };
 
+  // Cache for UUIDs and leaderboard data
   const uuidCache = new Map();
+  const CACHE_KEY = 'leaderboardCache';
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
   let leaderboardData = [];
   let allGameModes = [];
 
-  async function getUUID(username) {
-    if (uuidCache.has(username)) return uuidCache.get(username);
+  // Check if cached data is still valid
+  function getCachedData() {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp > CACHE_DURATION) return null;
+      
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
 
+  // Cache the data
+  function setCachedData(data) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      // Storage might be full, ignore
+    }
+  }
+
+  // Batch UUID fetching for better performance
+  async function getUUIDsBatch(usernames) {
+    const uniqueUsernames = [...new Set(usernames)];
+    const results = new Map();
+    
+    // Check cache first
+    const cachedUsernames = [];
+    const uncachedUsernames = [];
+    
+    uniqueUsernames.forEach(username => {
+      if (uuidCache.has(username)) {
+        results.set(username, uuidCache.get(username));
+      } else {
+        uncachedUsernames.push(username);
+      }
+    });
+    
+    if (uncachedUsernames.length === 0) return results;
+    
+    // Process in batches to avoid overwhelming the API
+    const batchSize = 10;
+    for (let i = 0; i < uncachedUsernames.length; i += batchSize) {
+      const batch = uncachedUsernames.slice(i, i + batchSize);
+      const promises = batch.map(username => getSingleUUID(username));
+      
+      const batchResults = await Promise.allSettled(promises);
+      
+      batchResults.forEach((result, index) => {
+        const username = batch[index];
+        if (result.status === 'fulfilled') {
+          results.set(username, result.value);
+          uuidCache.set(username, result.value);
+        } else {
+          // Use fallback UUID
+          const fallback = '8667ba71-b85a-4004-af54-457a9734eed7';
+          results.set(username, fallback);
+          uuidCache.set(username, fallback);
+        }
+      });
+      
+      // Small delay between batches to be respectful to the API
+      if (i + batchSize < uncachedUsernames.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    return results;
+  }
+
+  async function getSingleUUID(username) {
     try {
       const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
       if (!res.ok) throw new Error('Mojang API failed');
       const data = await res.json();
-      uuidCache.set(username, data.id);
       return data.id;
     } catch {
       try {
         const alt = await fetch(`https://api.minetools.eu/uuid/${username}`);
         const altData = await alt.json();
         if (altData.id) {
-          uuidCache.set(username, altData.id);
           return altData.id;
         }
-      } catch {}
-      const fallback = '8667ba71-b85a-4004-af54-457a9734eed7';
-      uuidCache.set(username, fallback);
-      return fallback;
+        throw new Error('Minetools API failed');
+      } catch {
+        throw new Error('All UUID APIs failed');
+      }
     }
   }
 
@@ -393,8 +585,41 @@
     return results.sort((a, b) => b.averageScore - a.averageScore);
   }
 
+  // Progressive rendering - show data as it becomes available
+  function renderLeaderboard(data, append = false) {
+    if (!append) {
+      leaderboardList.innerHTML = '';
+    }
+    
+    data.forEach(p => {
+      const skin = `https://crafatar.com/renders/body/${p.uuid}?overlay=true&size=80`;
+      const row = document.createElement('div');
+      row.className = 'leaderboard-row';
+      row.innerHTML = `
+        <div class="rank">${p.rank}</div>
+        <div class="player-info">
+          <img src="${skin}" class="player-body-render" alt="${p.name}" loading="lazy">
+          <div class="player-name">${p.name}</div>
+        </div>
+        <div class="tier-icons">
+          ${p.tierList.map(t => `<div class="tier-icon tier-${t}">${t}</div>`).join('')}
+        </div>
+      `;
+      leaderboardList.appendChild(row);
+    });
+  }
+
   async function loadOverallLeaderboard() {
-    leaderboardList.innerHTML = '<div class="loading">Calculating overall rankings...</div>';
+    // Try to load from cache first
+    const cachedData = getCachedData();
+    if (cachedData) {
+      leaderboardData = cachedData;
+      renderLeaderboard(cachedData);
+      return;
+    }
+
+    leaderboardList.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Calculating overall rankings...</div>';
+    
     try {
       allGameModes = await getAllGameModes();
       const { data, error } = await supabase
@@ -407,72 +632,68 @@
       }
 
       const averaged = calculatePlayerAverages(data, allGameModes);
-      const withUUIDs = [];
-      for (const player of averaged) {
-        const uuid = await getUUID(player.name);
-        withUUIDs.push({ ...player, uuid });
-      }
-
-      leaderboardData = withUUIDs.map((p, i) => ({
+      
+      // Get all unique player names for batch UUID fetching
+      const playerNames = averaged.map(p => p.name);
+      const uuidMap = await getUUIDsBatch(playerNames);
+      
+      // Create the final data structure
+      const withUUIDs = averaged.map((p, i) => ({
         rank: i + 1,
         name: p.name,
         tierList: p.tierList,
         overallTier: p.overallTier,
         averageScore: p.averageScore,
-        uuid: p.uuid
+        uuid: uuidMap.get(p.name) || '8667ba71-b85a-4004-af54-457a9734eed7'
       }));
 
+      leaderboardData = withUUIDs;
+      
+      // Cache the data
+      setCachedData(leaderboardData);
+      
+      // Render the leaderboard
       renderLeaderboard(leaderboardData);
     } catch (err) {
       console.error(err);
-      leaderboardList.innerHTML = '<div class="loading">Error loading data.</div>';
+      leaderboardList.innerHTML = '<div class="loading">Error loading data. Please try again.</div>';
     }
   }
 
-  function renderLeaderboard(data) {
-    leaderboardList.innerHTML = '';
-    data.forEach(p => {
-      const skin = `https://crafatar.com/renders/body/${p.uuid}?overlay=true&size=80`;
-      const row = document.createElement('div');
-      row.className = 'leaderboard-row';
-      row.innerHTML = `
-        <div class="rank">${p.rank}</div>
-        <div class="player-info">
-          <img src="${skin}" class="player-body-render" alt="${p.name}">
-          <div class="player-name">${p.name}</div>
-        </div>
-        <div class="tier-icons">
-          ${p.tierList.map(t => `<div class="tier-icon tier-${t}">${t}</div>`).join('')}
-        </div>
-      `;
-      leaderboardList.appendChild(row);
-    });
-  }
-
+  // Debounce search to improve performance
+  let searchTimeout;
   playerSearch.addEventListener('input', e => {
-    const term = e.target.value.toLowerCase();
-    const filtered = leaderboardData.filter(p => p.name.toLowerCase().includes(term));
-    renderLeaderboard(filtered);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const term = e.target.value.toLowerCase();
+      const filtered = leaderboardData.filter(p => p.name.toLowerCase().includes(term));
+      renderLeaderboard(filtered);
+    }, 300);
   });
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Load leaderboard immediately
     loadOverallLeaderboard();
-    particlesJS('particles-js', {
-      particles: {
-        number: { value: 70 },
-        color: { value: "#8b5cf6" },
-        opacity: { value: 0.3 },
-        size: { value: 3, random: true },
-        line_linked: {
-          enable: true,
-          distance: 150,
-          color: "#8b5cf6",
-          opacity: 0.1,
-          width: 1
-        },
-        move: { enable: true, speed: 1.6 }
-      }
-    });
+    
+    // Initialize particles (non-blocking)
+    setTimeout(() => {
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 40 }, // Reduced for better performance
+          color: { value: "#8b5cf6" },
+          opacity: { value: 0.3 },
+          size: { value: 3, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#8b5cf6",
+            opacity: 0.1,
+            width: 1
+          },
+          move: { enable: true, speed: 1.2 } // Reduced speed for better performance
+        }
+      });
+    }, 100);
   });
 </script>
 
