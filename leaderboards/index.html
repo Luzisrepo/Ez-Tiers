@@ -471,19 +471,8 @@
     'HT1': { score: 10, color: '#0891b2' }
   };
 
-  // Game mode names for tooltips
-  const gameModeNames = {
-    1: "BedWars",
-    2: "SkyWars",
-    3: "Duels",
-    4: "Murder Mystery",
-    5: "Build Battle",
-    6: "UHC",
-    7: "The Bridge",
-    8: "Wool Wars",
-    9: "Arena Brawl",
-    10: "Blitz SG"
-  };
+  // Game mode names for tooltips - will be populated from database
+  let gameModeNames = {};
 
   // Cache for UUIDs and leaderboard data
   const uuidCache = new Map();
@@ -591,11 +580,37 @@
 
   async function getAllGameModes() {
     try {
-      const { data, error } = await supabase.from('game_modes').select('id');
+      const { data, error } = await supabase
+        .from('game_modes')
+        .select('id, display_name')
+        .order('id', { ascending: true });
+      
       if (error) throw error;
+      
+      // Build the game mode names mapping
+      data.forEach(mode => {
+        gameModeNames[mode.id] = mode.display_name;
+      });
+      
       return data.map(g => g.id);
     } catch {
-      return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      // Fallback if database query fails
+      gameModeNames = {
+        1: "Sword",
+        2: "Axe", 
+        3: "Nethpot",
+        4: "Diapot",
+        5: "Mace",
+        6: "UHC",
+        7: "SMP",
+        8: "Creeper",
+        9: "Speedbeast",
+        10: "BedWars",
+        11: "The Bridge",
+        12: "Classic",
+        13: "Sumo"
+      };
+      return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     }
   }
 
