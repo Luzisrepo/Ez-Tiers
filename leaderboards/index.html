@@ -9,6 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- Spline Viewer -->
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.95/build/spline-viewer.js"></script>
+
   <!-- Supabase & Particles -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
@@ -44,6 +47,64 @@
       width: 100%;
       height: 100%;
       z-index: -1;
+    }
+
+    /* Spline Loading Screen */
+    #splineLoading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--dark-bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    #splineLoading.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none; /* This prevents mouse interactions */
+    }
+
+    .spline-container {
+      width: 90%;
+      max-width: 800px;
+      height: 60vh;
+      max-height: 500px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      margin-bottom: 2rem;
+    }
+
+    .loading-text {
+      font-size: 1.5rem;
+      color: var(--text);
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .loading-dots {
+      display: inline-block;
+      width: 20px;
+      text-align: left;
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.5s steps(5, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
     }
 
     .container {
@@ -413,13 +474,32 @@
       .tier-icons {
         justify-content: flex-start;
       }
+      .spline-container {
+        height: 40vh;
+      }
+      .loading-text {
+        font-size: 1.2rem;
+      }
     }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
 
-  <div class="container">
+  <!-- Spline Loading Screen -->
+  <div id="splineLoading">
+    <div class="spline-container">
+      <spline-viewer 
+        url="https://prod.spline.design/HteUs2c3yEN8ocZc/scene.splinecode"
+        loading-anim-type="spinner-small-dark"
+      ></spline-viewer>
+    </div>
+    <div class="loading-text">
+      Loading Leaderboard<span class="loading-dots"></span>
+    </div>
+  </div>
+
+  <div class="container" id="mainContent">
     <nav>
       <h1 class="logo">Ez Tiers</h1>
       <div class="nav-links">
@@ -498,6 +578,8 @@
 
   const playerSearch = document.getElementById('playerSearch');
   const leaderboardList = document.getElementById('leaderboardList');
+  const splineLoading = document.getElementById('splineLoading');
+  const mainContent = document.getElementById('mainContent');
 
   // Tier mapping for scoring and display
   const tiers = {
@@ -523,6 +605,16 @@
 
   let leaderboardData = [];
   let allGameModes = [];
+
+  // Function to hide loading screen and show content
+  function showContent() {
+    splineLoading.classList.add('hidden');
+    
+    // Additional safety: wait for transition to complete then set display none
+    setTimeout(() => {
+      splineLoading.style.display = 'none';
+    }, 500);
+  }
 
   // Check if cached data is still valid
   function getCachedData() {
@@ -761,11 +853,10 @@
     if (cachedData) {
       leaderboardData = cachedData;
       renderLeaderboard(cachedData);
+      showContent();
       return;
     }
 
-    leaderboardList.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Calculating overall rankings...</div>';
-    
     try {
       allGameModes = await getAllGameModes();
       const { data, error } = await supabase
@@ -774,6 +865,7 @@
       if (error) throw error;
       if (!data || !data.length) {
         leaderboardList.innerHTML = '<div class="loading">No player data found.</div>';
+        showContent();
         return;
       }
 
@@ -801,9 +893,11 @@
       
       // Render the leaderboard
       renderLeaderboard(leaderboardData);
+      showContent();
     } catch (err) {
       console.error(err);
       leaderboardList.innerHTML = '<div class="loading">Error loading data. Please try again.</div>';
+      showContent();
     }
   }
 
