@@ -351,10 +351,48 @@
             transform: scale(1.05);
         }
 
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .player-name-container {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
         .player-name {
             font-weight: 500;
             color: var(--text-primary);
         }
+
+        /* Tier tag styles */
+        .player-tier-tag {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        /* Tier colors for player tier tags */
+        .player-tier-LT5 { background: #4b5563; }
+        .player-tier-HT5 { background: #059669; }
+        .player-tier-LT4 { background: #2563eb; }
+        .player-tier-HT4 { background: #7c3aed; }
+        .player-tier-LT3 { background: #d97706; }
+        .player-tier-HT3 { background: #dc2626; }
+        .player-tier-LT2 { background: #db2777; }
+        .player-tier-HT2 { background: #ea580c; }
+        .player-tier-LT1 { background: #ca8a04; }
+        .player-tier-HT1 { background: #0891b2; }
 
         .player-item:last-child {
             border-bottom: none;
@@ -617,6 +655,12 @@
             
             .player-body-render {
                 height: 60px;
+            }
+
+            .player-name-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
             }
         }
 
@@ -1172,7 +1216,12 @@
                      class="player-body-render"
                      data-username="${player.name}"
                      onerror="this.src='${fallbackImage}'">
-                <div class="player-name">${player.name}</div>
+                <div class="player-info">
+                    <div class="player-name-container">
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-tier-tag player-tier-${player.tier}">${player.tier}</div>
+                    </div>
+                </div>
                 ${currentUser ? `<button class="edit-btn" data-player-id="${player.id}" data-player-name="${player.name}" data-player-tier="${player.tier}">
                     <i class="fas fa-edit"></i> Edit
                 </button>` : ''}
