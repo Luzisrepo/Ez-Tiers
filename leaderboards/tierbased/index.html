@@ -1131,6 +1131,18 @@
                     });
                 }
                 
+                // Sort each tier group: High Tiers first, then Low Tiers
+                for (const tierKey in tierGroups) {
+                    tierGroups[tierKey].sort((a, b) => {
+                        // High Tiers (HT) should come before Low Tiers (LT)
+                        if (a.tier.startsWith('HT') && b.tier.startsWith('LT')) return -1;
+                        if (a.tier.startsWith('LT') && b.tier.startsWith('HT')) return 1;
+                        
+                        // If both are HT or both are LT, sort by the tier score (higher first)
+                        return tiers[b.tier].score - tiers[a.tier].score;
+                    });
+                }
+                
                 // Populate the tier columns
                 await populateTierColumns(tierGroups);
                 
