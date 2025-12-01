@@ -460,16 +460,18 @@
   </div>
 
   <script>
-    // Supabase configuration
-    const supabaseUrl = 'https://dkfimhcwiufignzfqnxm.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmltaGN3aXVmaWduemZxbnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5OTc3MjQsImV4cCI6MjA3NDU3MzcyNH0.lOtCk4v3fkd1DJfvpqrv-NgyByNhEsaHeL4GEqGrQa8';
+    <script>
     
-    // Initialize Supabase client
+    const supabaseUrl = 'https://dkfimhcwiufignzfqnxm.supabase.co'; 
+    const supabaseKey = process.env.SUPABASE_KEY; 
+    
+    
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
     
-    // Discord webhooks
-    const NORMAL_WEBHOOK = "https://discord.com/api/webhooks/1431766991542161591/3NsdQAcPxgO6xP5y_AD9FW6rWB1aMP3z3a577AqFShOiKYOYni26jyw6R9aA5YtWP4jG";
-    const HIGH_WEBHOOK = "https://discord.com/api/webhooks/1431767143871156227/7_4cmtZ0NgRsHa9Mqgbx8-3wExrqK104z-AFQKWBySlV31IMoHCYrt4mth3K61pX5FhN";
+    
+    const NORMAL_WEBHOOK = process.env.DISCORD_NORMAL_WEBHOOK || "https://discord.com/api/webhooks/...";
+    const HIGH_WEBHOOK = process.env.DISCORD_HIGH_WEBHOOK || "https://discord.com/api/webhooks/...";
+    
 
     // DOM elements
     const loginModal = document.getElementById('login-modal');
